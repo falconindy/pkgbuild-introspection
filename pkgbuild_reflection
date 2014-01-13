@@ -30,16 +30,18 @@ extract_function_var() {
   # $3: multivalued
   # $4: name of output var
 
-  local funcname=$1 attr=$2 isarray=$3 outputvar=$4 attr_regex=
+  local funcname=$1 attr=$2 isarray=$3 outputvar=$4 attr_regex= decl=
 
   if (( isarray )); then
-    printf -v attr_regex '^[[:space:]]*%q\+?=\(' "$2"
+    printf -v attr_regex '^[[:space:]]*(declare( -[[:alpha:]])*)? %q\+?=\(' "$2"
   else
-    printf -v attr_regex '^[[:space:]]*%q\+?=[^(]' "$2"
+    printf -v attr_regex '^[[:space:]]*(declare( -[[:alpha:]])*)? %q\+?=[^(]' "$2"
   fi
 
   while read -r; do
-    eval "${REPLY/#*([[:space:]])$attr/$outputvar}"
+    # strip leading whitespace and any usage of declare
+    decl=${REPLY##*([[:space:]])?(declare +(-+([[:alpha:]]) ))}
+    eval "${decl/#$attr/$outputvar}"
   done < <(funcgrep "$funcname" "$attr_regex")
 }
 
