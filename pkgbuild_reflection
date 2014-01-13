@@ -150,12 +150,9 @@ srcinfo_create_package() {
     pkgbuild_extract_to_srcinfo "$pkg" '' "$attr" 1
   done
 
-  pkgbuild_get_array_attribute '' "arch" 'arch_'
-  for a in "${arch_[@]}"; do
-    # potentially architecture-specific metadata
-    for attr in depends optdepends provides conflicts replaces; do
-      pkgbuild_extract_to_srcinfo "$pkg" "$a" "$attr" 1
-    done
+  # FIXME: these attribute should be architecture specific
+  for attr in depends optdepends provides conflicts replaces; do
+    pkgbuild_extract_to_srcinfo "$pkg" '' "$attr" 1
   done
 
   srcinfo_end_section
