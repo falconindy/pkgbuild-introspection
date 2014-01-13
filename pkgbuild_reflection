@@ -1,0 +1,160 @@
+#!/bin/bash
+
+shopt -s extglob
+
+array_build() {
+  eval "$1=(\"\${$2[@]}\")"
+}
+
+funcgrep() {
+  # echo "{ declare -f '$1' || declare -f package; } 2>/dev/null | grep -E '$2'" >&2
+  { declare -f "$1" || declare -f package; } 2>/dev/null | grep -E "$2"
+}
+
+extract_global_var() {
+  # $1: variable name
+  # $2: multivalued
+  # $3: name of output var
+
+  local attr=$1 isarray=$2 outputvar=$3
+
+  if (( isarray )); then
+    array_build "$outputvar" "$attr"
+  else
+    declare -g "$outputvar=${!attr}"
+  fi
+}
+
+extract_function_var() {
+  # $1: function name
+  # $2: variable name
+  # $3: multivalued
+  # $4: name of output var
+
+  local funcname=$1 attr=$2 isarray=$3 outputvar=$4 attr_regex=
+
+  if (( isarray )); then
+    printf -v attr_regex '^[[:space:]]*%q\+?=\(' "$2"
+  else
+    printf -v attr_regex '^[[:space:]]*%q\+?=[^(]' "$2"
+  fi
+
+  while read -r; do
+    eval "${REPLY/#*([[:space:]])$attr/$outputvar}"
+  done < <(funcgrep "$funcname" "$attr_regex")
+}
+
+pkgbuild_get_array_attribute() {
+  # $1: package name
+  # $2: attribute name
+  # $3: name of output var
+
+  if [[ $1 ]]; then
+    extract_function_var "package_$1" "$2" 1 "$3"
+  else
+    extract_global_var "$2" 1 "$3"
+  fi
+}
+
+pkgbuild_get_attribute() {
+  # $1: package name
+  # $2: attribute name
+  # $3: name of output var
+
+  if [[ $1 ]]; then
+    extract_function_var "package_$1" "$2" 0 "$3"
+  else
+    extract_global_var "$2" 0 "$3"
+  fi
+}
+
+srcinfo_write_header() {
+  printf '%s = %s\n' "$1" "$2"
+}
+
+srcinfo_end_section() {
+  echo
+}
+
+srcinfo_write_attr() {
+  # $1: pkgname (pass an empty string for global level)
+  # $2: architecture (empty string for arch-independent metadata)
+  # $3: attr name
+  # $4: attr value
+
+  local fmtstring arch=$1 attrname=$2 attrvalues=("${@:3}")
+
+  [[ $attrvalues ]] || return 0
+
+  if [[ $arch ]]; then
+    fmtstring+="$attrname@$arch = %s"
+  else
+    fmtstring+="$attrname = %s"
+  fi
+
+  printf "\t$fmtstring\n" "${attrvalues[@]}"
+}
+
+pkgbuild_extract_to_srcinfo() {
+  # $1: pkgname
+  # $2: architecute (empty string for arch-independent metadata)
+  # $3: attr name
+  # $4: multivalued
+  # $5: allow package-specific override
+
+  local pkgname=$1 arch=$2 outputvar=${3}_ attrname=$3 isarray=$4
+  local localcopy=
+
+  if (( isarray )); then
+    pkgbuild_get_array_attribute "$pkgname" "$attrname" "$outputvar"
+    array_build 'localcopy' "$outputvar"
+    srcinfo_write_attr "$arch" "$attrname" "${localcopy[@]}"
+  else
+    pkgbuild_get_attribute "$pkgname" "$attrname" "$outputvar"
+    srcinfo_write_attr "$arch" "$attrname" "${!outputvar}"
+  fi
+}
+
+srcinfo_create() {
+  local pkg arch_ attr array
+
+  srcinfo_write_header 'pkgbase' "${pkgbase:-$pkgname}"
+  srcinfo_write_attr '' 'pkgname' "${pkgname[@]}"
+
+  pkgbuild_get_array_attribute '' "arch" 'arch_'
+  srcinfo_write_attr '' 'arch' "${arch_[@]}"
+
+  for attr in groups depends optdepends provides conflicts replaces; do
+    array_build 'array' "$attr"
+    [[ $arr ]] && srcinfo_write_global_attr '' "$attr" "${array[@]}"
+  done
+
+  for attr in pkgver pkgrel url license; do
+    pkgbuild_extract_to_srcinfo '' '' "$attr" 0
+  done
+
+  pkgbuild_extract_to_srcinfo '' '' 'makedepends' 1
+
+  srcinfo_end_section
+
+  for pkg in "${pkgname[@]}"; do
+    srcinfo_write_header 'pkgname' "$pkg"
+
+    # package specific metadata
+    for attr in pkgdesc license groups; do
+      pkgbuild_extract_to_srcinfo "$pkg" '' "$attr" 0
+    done
+
+    for a in "${arch_[@]}"; do
+      # potentially architecture-specific metadata
+      for attr in depends optdepends provides conflicts replaces; do
+        pkgbuild_extract_to_srcinfo "$pkg" "$a" "$attr" 1
+      done
+    done
+    srcinfo_end_section
+  done
+}
+
+. "${1:-./PKGBUILD}" && srcinfo_create
+
+# vim: set et ts=2 sw=2:

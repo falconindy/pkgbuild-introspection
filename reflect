@@ -1,0 +1,3 @@
+#!/bin/bash
+
+exec ./pkgbuild_reflection "/var/abs/$1/PKGBUILD"
