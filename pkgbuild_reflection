@@ -103,7 +103,6 @@ pkgbuild_extract_to_srcinfo() {
   # $2: architecute (empty string for arch-independent metadata)
   # $3: attr name
   # $4: multivalued
-  # $5: allow package-specific override
 
   local pkgname=$1 arch=$2 outputvar=${3}_ attrname=$3 isarray=$4
   local localcopy=
