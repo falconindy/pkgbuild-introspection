@@ -1,0 +1,25 @@
+#!/bin/bash
+
+. "${0%/*}/pkgbuild_reflection"
+
+mkaurball() {
+  makepkg --source || return
+
+  . ./PKGBUILD
+
+  local tarball_basename=${pkgbase:-$pkgname}
+  local tarball_fullname=$tarball_basename-$pkgver-$pkgrel.src.tar.gz
+  local tmpdir=$(mktemp -d --tmpdir gensrcinfo.XXXXXX)
+
+  bsdtar -C "$tmpdir" -xf "$tarball_fullname"
+
+  srcinfo_create >"$tmpdir/$tarball_basename/.AURINFO"
+
+  bsdtar -C "$tmpdir" -czLf "$PWD/$tarball_fullname" "$tarball_basename"
+
+  rm -rf "$tmpdir"
+}
+
+mkaurball "$1"
+
+# vim: set et ts=2 sw=2:

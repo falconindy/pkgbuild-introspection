@@ -1,3 +1,7 @@
 #!/bin/bash
 
-exec ./pkgbuild_reflection "/var/abs/$1/PKGBUILD"
+. "${0%/*}/pkgbuild_reflection"
+
+srcinfo_create_from_pkgbuild "/var/abs/$1/PKGBUILD"
+
+# vim: set et ts=2 sw=2:
