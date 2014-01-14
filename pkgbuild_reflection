@@ -123,7 +123,7 @@ srcinfo_create_global() {
 
   local singlevalued=(pkgname pkgdesc pkgver pkgrel url)
   local multivalued=(arch groups license makedepends depends optdepends provides
-                     conflicts replaces)
+                     conflicts replaces source)
 
   for attr in "${singlevalued[@]}"; do
     pkgbuild_extract_to_srcinfo '' '' "$attr" 0
