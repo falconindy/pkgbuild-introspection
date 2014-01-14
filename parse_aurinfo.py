@@ -26,16 +26,6 @@ class AurInfo(object):
         return self._pkgbase
 
 
-def GetPackage(aurinfo, pkgname):
-    package = deepcopy(aurinfo['pkgbase'])
-    for k, v in aurinfo[pkgname].items():
-        package[k] = deepcopy(v)
-    return package
-
-
-def ListPackageNames(aurinfo):
-    return (key for key in aurinfo.keys() if key != 'pkgbase')
-
 def ParseAurinfo(filename='.AURINFO'):
     aurinfo = AurInfo()
 
