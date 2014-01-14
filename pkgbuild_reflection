@@ -106,16 +106,15 @@ pkgbuild_extract_to_srcinfo() {
   # $3: attr name
   # $4: multivalued
 
-  local pkgname=$1 arch=$2 outputvar=${3}_ attrname=$3 isarray=$4
-  local localcopy=
+  local pkgname=$1 architecture=$2 attrname=$3 isarray=$4
+  unset outvalue
 
   if (( isarray )); then
-    pkgbuild_get_array_attribute "$pkgname" "$attrname" "$outputvar"
-    array_build 'localcopy' "$outputvar"
-    srcinfo_write_attr "$arch" "$attrname" "${localcopy[@]}"
+    pkgbuild_get_array_attribute "$pkgname" "$attrname" 'outvalue'
+    srcinfo_write_attr "$architecture" "$attrname" "${outvalue[@]}"
   else
-    pkgbuild_get_attribute "$pkgname" "$attrname" "$outputvar"
-    srcinfo_write_attr "$arch" "$attrname" "${!outputvar}"
+    pkgbuild_get_attribute "$pkgname" "$attrname" 'outvalue'
+    srcinfo_write_attr "$architecture" "$attrname" "$outvalue"
   fi
 }
 
