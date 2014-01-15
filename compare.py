@@ -1,8 +1,12 @@
 #!/usr/bin/env python
 
+import glob
+import os
 import string
 import subprocess
 import sys
+
+from multiprocessing import Pool
 
 import parse_aurinfo
 
@@ -18,12 +22,15 @@ TEST_KEYS = {
     'Replaces': (True, 'replaces'),
 }
 
+def output_of(argv, envp=None):
+    env = envp or os.environ
+    return subprocess.check_output(argv, env=env).decode().rstrip().split('\n')
+
 def package_from_repo(repo, pkgname):
     repo_package = {}
 
-    pacout = subprocess.check_output([
-        '/usr/bin/pacman', '-Si', '%s/%s' % (repo, pkgname)], env={'LC_ALL': 'C'}
-        ).decode().rstrip().split('\n')
+    pacout = output_of(['/usr/bin/pacman', '-Si', '%s/%s' % (repo, pkgname)],
+            envp={'LC_ALL': 'C'})
 
     for line in pacout:
         # lines not starting with a capital letter are probaly stupid optdeps
@@ -71,13 +78,16 @@ def compare(repo, package):
 
     repo_package = package_from_repo(repo, pkgname)
 
+    diffcount = 0
     for k, v in repo_package.items():
         if k not in package:
+            diffcount += 1
             print("DIFF(%s): attribute %s in repo, not in AURINFO" % (pkgname, k))
             print('          repo   : %s' % v)
             continue
 
         if v == 'None' and package[k]:
+            diffcount += 1
             print('DIFF(%s): attribute %s in AURINFO, not in repo' % (pkgname, k))
             print('          AURINFO: %s' % package[k])
             continue
@@ -102,21 +112,78 @@ def compare(repo, package):
                 continue
 
         print('DIFF(%s):\n  repo   : %s\n  AURINFO: %s\n' % (pkgname, v, package[k]))
+        diffcount += 1
 
+    return diffcount
 
-def main(argv):
-    repo = argv[1]
-    pkgname = argv[2]
-
+def CompareOne(repo, pkgname):
     # parse the PKGBUILD into .AURINFO
-    aurinfo = subprocess.check_output(['./reflect', '%s/%s' % (repo, pkgname)]).decode()
+    aurinfo = output_of(['./reflect', '%s/%s' % (repo, pkgname)])
 
     # i'm misunderstanding the pythonic way of doing this....
-    parsed_aurinfo = parse_aurinfo.ParseAurinfoFromIterable(aurinfo.split('\n'))
+    parsed_aurinfo = parse_aurinfo.ParseAurinfoFromIterable(aurinfo)
+
+    diffs, total_attrs = 0, 0
 
     for p in parsed_aurinfo.GetPackageNames():
         package = parsed_aurinfo.GetMergedPackage(p)
-        compare(repo, package)
+        diffs += compare(repo, package)
+        total_attrs += len(package)
+
+    return diffs, total_attrs
+
+
+def PrintStatistics(stats):
+    total_diffs = sum(s[0] for s in stats)
+    total_attrs = sum(s[1] for s in stats)
+    diff_pkg_count = sum(bool(s[0]) for s in stats)
+
+    print()
+    print('Total PKGBUILDs read: %d' % len(stats))
+    print('Total attributes checked: %d' % total_attrs)
+    print('Total differences found: %d' % total_diffs)
+    print('Average attributes per PKGBUILD: %.2f' % (total_attrs / len(stats)))
+    print('Accuracy across PKGBUILDs: %.3f%%' % (
+        100 - (diff_pkg_count / len(stats) * 100)))
+
+    if total_diffs:
+        print('Total PKGBUILDs with differences: %d' % diff_pkg_count)
+        print('Average differences per PKGBUILD: %.3f' % (
+            total_diffs / total_attrs))
+
+
+class Comparator(object):
+    def __init__(self, repo):
+        self._repo = repo
+    def __call__(self, pkg):
+        return CompareOne(self._repo, pkg)
+
+
+class PkgbuildExists(object):
+    def __init__(self, repo):
+        self._repo = repo
+    def __call__(self, pkg):
+        return os.access("/var/abs/%s/%s/PKGBUILD" % (self._repo, pkg), os.R_OK)
+
+def main(argv):
+    subjects = []
+    if '/' in argv[1]:
+        repo, pkg = argv[1].split('/')
+        subjects.append(pkg)
+    else:
+        repo = argv[1]
+        subjects = output_of(['pacman', '-Slq', repo])
+
+    pkgs = filter(PkgbuildExists(repo), subjects)
+    if not pkgs:
+        sys.exit(1)
+
+    pool = Pool(20)
+    diffstats = pool.map(Comparator(repo), pkgs)
+    pool.close()
+    pool.join()
+
+    PrintStatistics(diffstats)
 
 
 if __name__ == '__main__':
