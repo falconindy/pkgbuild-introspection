@@ -53,6 +53,7 @@ pkgbuild_get_array_attribute() {
   declare -g "$3="
 
   if [[ $1 ]]; then
+    extract_global_var "$2" 1 "$3"
     extract_function_var "package_$1" "$2" 1 "$3"
   else
     extract_global_var "$2" 1 "$3"
@@ -67,6 +68,7 @@ pkgbuild_get_attribute() {
   declare -g "$3="
 
   if [[ $1 ]]; then
+    extract_global_var "$2" 0 "$3"
     extract_function_var "package_$1" "$2" 0 "$3"
   else
     extract_global_var "$2" 0 "$3"
