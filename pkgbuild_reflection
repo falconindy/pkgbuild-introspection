@@ -97,7 +97,7 @@ srcinfo_write_attr() {
     fmtstring+="$attrname = %s"
   fi
 
-  printf "\t$fmtstring\n" "${attrvalues[@]}"
+  printf "\t$fmtstring\n" "${attrvalues[@]//+([[:space:]])/ }"
 }
 
 pkgbuild_extract_to_srcinfo() {
