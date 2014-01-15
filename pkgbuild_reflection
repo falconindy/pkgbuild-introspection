@@ -170,7 +170,12 @@ srcinfo_create() {
 }
 
 srcinfo_create_from_pkgbuild() {
-  ( . "$1" && srcinfo_create )
+  (
+    shopt -u extglob
+    . "$1" || exit 1
+    shopt -s extglob
+    srcinfo_create
+  )
 }
 
 # vim: set et ts=2 sw=2:
