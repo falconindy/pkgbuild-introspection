@@ -13,6 +13,7 @@ class AurInfo(object):
 
     def GetMergedPackage(self, pkgname):
         package = deepcopy(self._pkgbase)
+        package['pkgname'] = pkgname
         for k, v in self._packages.get(pkgname).items():
             package[k] = deepcopy(v)
         return package
@@ -25,34 +26,41 @@ class AurInfo(object):
         self._pkgbase = {'pkgname' : pkgbasename}
         return self._pkgbase
 
-
-def ParseAurinfo(filename='.AURINFO'):
+def ParseAurinfoFromIterable(iterable):
     aurinfo = AurInfo()
 
-    with open(filename) as f:
-        current_package = None
+    current_package = None
 
-        for line in f:
-            line = line.rstrip()
+    for line in iterable:
+        line = line.rstrip()
 
-            if not line:
-                # end of package
-                current_package = None
-            elif not line.startswith('\t'):
-                # start of new package
-                key, value = line.split(' = ', 1)
-                if key == 'pkgbase':
-                    current_package = aurinfo.SetPkgbase(value)
-                else:
-                    current_package = aurinfo.AddPackage(value)
+        if not line:
+            # end of package
+            current_package = None
+        elif not line.startswith('\t'):
+            # start of new package
+            key, value = line.split(' = ', 1)
+            if key == 'pkgbase':
+                current_package = aurinfo.SetPkgbase(value)
             else:
-                # package attribute
-                key, value = line.lstrip('\t').split(' = ', 1)
-                if not current_package.get(key):
-                    current_package[key] = []
-                current_package[key].append(value)
+                current_package = aurinfo.AddPackage(value)
+        else:
+            # package attribute
+            key, value = line.lstrip('\t').split(' = ', 1)
+
+            # XXX: This isn't really correct, since it forces all attributes to
+            # be multi-valued. A proper parser would maintain a descriptor of
+            # the attributes and the allowed values.
+            if not current_package.get(key):
+                current_package[key] = []
+            current_package[key].append(value)
 
     return aurinfo
+
+
+def ParseAurinfo(filename='.AURINFO'):
+    with open(filename) as f:
+        return ParseAurinfoFromIterable(f)
 
 
 if __name__ == '__main__':
