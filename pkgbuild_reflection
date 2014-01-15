@@ -142,7 +142,7 @@ srcinfo_create_package() {
   srcinfo_write_header 'pkgname' "$pkg"
 
   # single-valued attributes
-  for attr in pkgdesc; do
+  for attr in pkgdesc url; do
     pkgbuild_extract_to_srcinfo "$pkg" '' "$attr" 0
   done
 
