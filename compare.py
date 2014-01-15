@@ -114,7 +114,7 @@ def compare(repo, package):
             if ' '.join(v) == ' '.join(package[k]):
                 continue
 
-        print('DIFF(%s):\n  repo   : %s\n  AURINFO: %s\n' % (pkgname, v, package[k]))
+        print('DIFF(%s|%s):\n  repo   : %s\n  AURINFO: %s\n' % (pkgname, k, v, package[k]))
         diffcount += 1
 
     return diffcount
