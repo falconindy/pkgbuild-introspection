@@ -37,16 +37,28 @@ def ParseAurinfoFromIterable(iterable):
         if not line:
             # end of package
             current_package = None
-        elif not line.startswith('\t'):
+            continue
+
+        if not line.startswith('\t'):
             # start of new package
-            key, value = line.split(' = ', 1)
+            try:
+                key, value = line.split(' = ', 1)
+            except ValueError:
+                print('unexpected header format: section=%s, line=%s' % (
+                    current_package['pkgname'], line))
+                continue
+
             if key == 'pkgbase':
                 current_package = aurinfo.SetPkgbase(value)
             else:
                 current_package = aurinfo.AddPackage(value)
         else:
             # package attribute
-            key, value = line.lstrip('\t').split(' = ', 1)
+            try:
+                key, value = line.lstrip('\t').split(' = ', 1)
+            except ValueError:
+                print('unexpected attribute format: section=%s, line=%s' % (
+                    current_package['pkgname'], line))
 
             # XXX: This isn't really correct, since it forces all attributes to
             # be multi-valued. A proper parser would maintain a descriptor of
