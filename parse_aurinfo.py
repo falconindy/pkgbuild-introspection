@@ -3,6 +3,27 @@
 from copy import deepcopy
 import pprint
 
+MULTIVALUED_ATTRS = set([
+    'arch',
+    'groups',
+    'makedepends',
+    'checkdepends',
+    'optdepends',
+    'depends',
+    'provides',
+    'conflicts',
+    'replaces',
+    'options',
+    'license',
+    'source',
+    'noextract',
+    'backup',
+])
+
+def IsMultiValued(attr):
+    return attr in MULTIVALUED_ATTRS
+
+
 class AurInfo(object):
     def __init__(self):
         self._pkgbase = {}
@@ -60,12 +81,16 @@ def ParseAurinfoFromIterable(iterable):
                 print('unexpected attribute format: section=%s, line=%s' % (
                     current_package['pkgname'], line))
 
-            # XXX: This isn't really correct, since it forces all attributes to
-            # be multi-valued. A proper parser would maintain a descriptor of
-            # the attributes and the allowed values.
-            if not current_package.get(key):
-                current_package[key] = []
-            current_package[key].append(value)
+            if IsMultiValued(key):
+                if not current_package.get(key):
+                    current_package[key] = []
+                current_package[key].append(value)
+            else:
+                if not current_package.get(key):
+                    current_package[key] = value
+                else:
+                    print('WARNING: overwriting attribute %s: %s -> %s' % (
+                        key, current_package[key], value))
 
     return aurinfo
 

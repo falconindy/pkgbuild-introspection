@@ -96,12 +96,6 @@ def compare(repo, package):
         if v == package[k]:
             continue
 
-        # 1) Maybe this is a single valued attribute...
-        # TODO: this should go away once the .AURINFO parser understands
-        # multi-valued versus single-valued.
-        if len(package[k]) == 1 and package[k][0] == v:
-            continue
-
         # Depends and provides might have soname architectures which won't
         # appear in the PKGBUILD.
         if k in ('depends', 'provides'):
