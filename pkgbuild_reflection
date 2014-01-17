@@ -142,9 +142,9 @@ pkgbuild_extract_to_srcinfo() {
 srcinfo_create_global() {
   srcinfo_write_header 'pkgbase' "${pkgbase:-$pkgname}"
 
-  local singlevalued=(pkgname pkgdesc pkgver pkgrel url)
-  local multivalued=(arch groups license makedepends depends optdepends provides
-                     conflicts replaces source)
+  local singlevalued=(pkgname pkgdesc pkgver pkgrel epoch url install changelog)
+  local multivalued=(arch groups license checkdepends makedepends depends optdepends
+                     provides conflicts replaces source noextract options backup)
 
   for attr in "${singlevalued[@]}"; do
     pkgbuild_extract_to_srcinfo '' '' "$attr" 0
@@ -168,7 +168,7 @@ srcinfo_create_package() {
   done
 
   # multi-valued attributes
-  for attr in license groups; do
+  for attr in backup license groups; do
     pkgbuild_extract_to_srcinfo "$pkg" '' "$attr" 1
   done
 
