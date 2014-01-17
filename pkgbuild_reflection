@@ -50,11 +50,20 @@ pkgbuild_get_array_attribute() {
   # $2: attribute name
   # $3: name of output var
 
+  local global_var function_var
+
   declare -g "$3="
 
   if [[ $1 ]]; then
     extract_global_var "$2" 1 "$3"
     extract_function_var "package_$1" "$2" 1 "$3"
+
+    # if global_var == function_var, don't set an override
+    array_build 'global_var' "$2"
+    array_build 'function_var' "$3"
+    if [[ $1 && ${global_var[*]} = "${function_var[@]}" ]]; then
+      unset "$3"
+    fi
   else
     extract_global_var "$2" 1 "$3"
   fi
@@ -70,6 +79,11 @@ pkgbuild_get_attribute() {
   if [[ $1 ]]; then
     extract_global_var "$2" 0 "$3"
     extract_function_var "package_$1" "$2" 0 "$3"
+
+    # if global_var == function_var, don't set an override
+    if [[ $1 && ${!2} = "${!3}" ]]; then
+      unset "$3"
+    fi
   else
     extract_global_var "$2" 0 "$3"
   fi
