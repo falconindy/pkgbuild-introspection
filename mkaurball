@@ -8,7 +8,7 @@ mkaurball() {
   . ./PKGBUILD
 
   local tarball_basename=${pkgbase:-$pkgname}
-  local tarball_fullname=$tarball_basename-$pkgver-$pkgrel.src.tar.gz
+  local tarball_fullname=$tarball_basename-${epoch+$epoch:}$pkgver-$pkgrel.src.tar.gz
   local tmpdir=$(mktemp -d --tmpdir gensrcinfo.XXXXXX)
 
   bsdtar -C "$tmpdir" -xf "$tarball_fullname"
