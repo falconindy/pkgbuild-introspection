@@ -1,6 +1,6 @@
 #!/bin/bash
 
-. "${0%/*}/pkgbuild_introspection"
+m4_include(pkgbuild_introspection)
 
 makepkg_args=('--source')
 
@@ -14,7 +14,7 @@ die() {
 }
 
 usage() {
-  echo 'mkaurball'
+  echo 'mkaurball v@VERSION@'
   echo
   echo 'mkaurball wraps the process of creating a source tarball with an'
   echo '.AURINFO file, suitable for submission to the AUR.'
