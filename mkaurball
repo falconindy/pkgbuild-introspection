@@ -2,6 +2,8 @@
 
 . "${0%/*}/pkgbuild_introspection"
 
+makepkg_args=('--source')
+
 error() {
   printf "ERROR: $1\n" "${@:2}" >&2
 }
@@ -11,6 +13,20 @@ die() {
   exit 1
 }
 
+usage() {
+  echo 'mkaurball'
+  echo
+  echo 'mkaurball wraps the process of creating a source tarball with an'
+  echo '.AURINFO file, suitable for submission to the AUR.'
+  echo
+  echo 'Usage: mkaurball [options]'
+  echo
+  echo '    -a <file>  package <file> as .AURINFO'
+  echo '    -e         edit .AURINFO before repackaging'
+  echo '    -f         pass the --force flag to makepkg'
+  echo '    -h         display this help message and exit'
+}
+
 mkaurball() {
   local tarball_basename= tarball_fullname= tmpdir=
 
@@ -18,7 +34,7 @@ mkaurball() {
     die 'Unable to source %s/PKGBUILD' "$PWD"
   fi
 
-  if ! makepkg --source; then
+  if ! makepkg "${makepkg_args[@]}"; then
     die 'makepkg exited non-zero'
   fi
 
@@ -36,8 +52,19 @@ mkaurball() {
     die 'Failed to unpack tarball'
   fi
 
-  if ! srcinfo_create >"$tmpdir/$tarball_basename/.AURINFO"; then
-    die 'Failed to write .AURINFO'
+  if [[ $srcinfo_path ]]; then
+    if ! srcinfo_create >"$tmpdir/$tarball_basename/.AURINFO"; then
+      die 'Failed to write .AURINFO'
+    fi
+  else
+    if ! cp "$srcinfo_path" "$tmpdir/$tarball_basename/.AURINFO"; then
+      die 'Failed to add %s to tarball' "$srcinfo_path"
+    fi
+  fi
+
+  if (( edit_srcinfo )); then
+    # TODO: validate the edited .AURINFO
+    "${VISUAL:-${EDITOR:-vi}}" "$tmpdir/$tarball_basename/.AURINFO"
   fi
 
   if !  bsdtar -C "$tmpdir" -czLf "$PWD/$tarball_fullname" "$tarball_basename"; then
@@ -45,6 +72,31 @@ mkaurball() {
   fi
 }
 
+while getopts ':a:efh' flag; do
+  case $flag in
+    a)
+      srcinfo_path=$OPTARG
+      ;;
+    e)
+      edit_srcinfo=1
+      ;;
+    f)
+      makepkg_args+=('--force')
+      ;;
+    h)
+      usage
+      exit 0
+      ;;
+    :)
+      die "option '%s' requires an argument'" "$OPTARG"
+      ;;
+    \?)
+      die "invalid option -- '$OPTARG'"
+      ;;
+  esac
+done
+
+exit 0
 mkaurball
 
 # vim: set et ts=2 sw=2:
