@@ -17,6 +17,9 @@ all: $(BINPROGS)
 	$(edit)
 	@bash -O extglob -n $@
 
+clean:
+	$(RM) $(BINPROGS)
+
 smoketest:
 	@for repo in core extra community multilib; \
 		do echo testing $$repo; time ./compare.py $$repo >$$repo.log; \
