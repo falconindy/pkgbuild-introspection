@@ -2,22 +2,47 @@
 
 . "${0%/*}/pkgbuild_reflection"
 
+error() {
+  printf "ERROR: $1\n" "${@:2}" >&2
+}
+
+die() {
+  error "$@"
+  exit 1
+}
+
 mkaurball() {
-  makepkg --source || return
+  local tarball_basename= tarball_fullname= tmpdir=
 
-  . ./PKGBUILD
+  if ! . ./PKGBUILD; then
+    die 'Unable to source %s/PKGBUILD' "$PWD"
+  fi
 
-  local tarball_basename=${pkgbase:-$pkgname}
-  local tarball_fullname=$tarball_basename-${epoch+$epoch:}$pkgver-$pkgrel.src.tar.gz
-  local tmpdir=$(mktemp -d --tmpdir gensrcinfo.XXXXXX)
+  if ! makepkg --source; then
+    die 'makepkg exited non-zero'
+  fi
 
-  bsdtar -C "$tmpdir" -xf "$tarball_fullname"
+  tarball_basename=${pkgbase:-$pkgname}
+  tarball_fullname=$tarball_basename-${epoch+$epoch:}$pkgver-$pkgrel.src.tar.gz
 
-  srcinfo_create >"$tmpdir/$tarball_basename/.AURINFO"
+  if [[ ! -f $tarball_fullname ]]; then
+    die 'Expected tarball name not found: %s' "$tarball_fullname"
+  fi
 
-  bsdtar -C "$tmpdir" -czLf "$PWD/$tarball_fullname" "$tarball_basename"
+  tmpdir=$(mktemp -d --tmpdir mkaurball.XXXXXX) || return
+  trap 'rm -rf "$tmpdir"' RETURN EXIT
 
-  rm -rf "$tmpdir"
+  if ! bsdtar -C "$tmpdir" -xf "$tarball_fullname"; then
+    die 'Failed to unpack tarball'
+  fi
+
+  if ! srcinfo_create >"$tmpdir/$tarball_basename/.AURINFO"; then
+    die 'Failed to write .AURINFO'
+  fi
+
+  if !  bsdtar -C "$tmpdir" -czLf "$PWD/$tarball_fullname" "$tarball_basename"; then
+    die 'Failed to repack tarball'
+  fi
 }
 
 mkaurball
