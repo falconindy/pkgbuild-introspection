@@ -1,7 +1,7 @@
 This is a proof of concept used to extract metadata from PKGBUILDs.
 
-  - pkgbuild_reflection: the actual work is done here
-  - reflect: a test driver for pkgbuild_reflection
+  - pkgbuild_introspection: the actual work is done here
+  - introspect: a test driver for pkgbuild_introspection
   - mkaurball: creates a source tarball (ala `makepkg --source`) with a
     generated `.AURINFO` file
   - parse_aurinfo.py: an implementation of an .AURINFO parser

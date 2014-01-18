@@ -1,6 +1,6 @@
 #!/bin/bash
 
-. "${0%/*}/pkgbuild_reflection"
+. "${0%/*}/pkgbuild_introspection"
 
 error() {
   printf "ERROR: $1\n" "${@:2}" >&2

@@ -115,7 +115,7 @@ def compare(repo, package):
 
 def CompareOne(repo, pkgname):
     # parse the PKGBUILD into .AURINFO
-    aurinfo = output_of(['./reflect', '%s/%s' % (repo, pkgname)])
+    aurinfo = output_of(['./introspect', '%s/%s' % (repo, pkgname)])
 
     # i'm misunderstanding the pythonic way of doing this....
     parsed_aurinfo = parse_aurinfo.ParseAurinfoFromIterable(aurinfo)
