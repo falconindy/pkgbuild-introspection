@@ -96,7 +96,6 @@ while getopts ':a:efh' flag; do
   esac
 done
 
-exit 0
 mkaurball
 
 # vim: set et ts=2 sw=2:
