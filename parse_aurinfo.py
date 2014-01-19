@@ -65,7 +65,7 @@ def ParseAurinfoFromIterable(iterable):
             try:
                 key, value = line.split(' = ', 1)
             except ValueError:
-                print('unexpected header format: section=%s, line=%s' % (
+                print('ERROR: unexpected header format: section=%s, line=%s' % (
                     current_package['pkgname'], line))
                 continue
 
@@ -74,11 +74,15 @@ def ParseAurinfoFromIterable(iterable):
             else:
                 current_package = aurinfo.AddPackage(value)
         else:
+            if current_package is None:
+                print('ERROR: package attribute found outside of a package section')
+                continue
+
             # package attribute
             try:
                 key, value = line.lstrip('\t').split(' = ', 1)
             except ValueError:
-                print('unexpected attribute format: section=%s, line=%s' % (
+                print('ERROR: unexpected attribute format: section=%s, line=%s' % (
                     current_package['pkgname'], line))
 
             if IsMultiValued(key):
