@@ -2,6 +2,7 @@
 
 from copy import deepcopy
 import pprint
+import sys
 
 MULTIVALUED_ATTRS = set([
     'arch',
@@ -47,12 +48,38 @@ class AurInfo(object):
         self._pkgbase = {'pkgname' : pkgbasename}
         return self._pkgbase
 
-def ParseAurinfoFromIterable(iterable):
+class ECatcherInterface(object):
+    def Catch(self, lineno, error):
+        raise NotImplementedError
+
+
+class StderrECatcher(ECatcherInterface):
+    def Catch(self, lineno, error):
+        print('ERROR[%d]: %s' % (lineno, error), file=sys.stderr)
+
+
+class CollectionECatcher(ECatcherInterface):
+    def __init__(self):
+        self._errors = []
+
+    def Catch(self, lineno, error):
+        self._errors.append((lineno, error))
+
+    def HasErrors(self):
+        return len(self._errors) > 0
+
+
+def ParseAurinfoFromIterable(iterable, ecatcher=None):
     aurinfo = AurInfo()
 
+    if ecatcher is None:
+        ecatcher = StderrECatcher()
+
     current_package = None
+    lineno = 0
 
     for line in iterable:
+        lineno += 1
         line = line.rstrip()
 
         if not line:
@@ -65,8 +92,8 @@ def ParseAurinfoFromIterable(iterable):
             try:
                 key, value = line.split(' = ', 1)
             except ValueError:
-                print('ERROR: unexpected header format: section=%s, line=%s' % (
-                    current_package['pkgname'], line))
+                ecatcher.Catch(lineno, 'unexpected header format in section=%s' %
+                    current_package['pkgname'])
                 continue
 
             if key == 'pkgbase':
@@ -75,15 +102,16 @@ def ParseAurinfoFromIterable(iterable):
                 current_package = aurinfo.AddPackage(value)
         else:
             if current_package is None:
-                print('ERROR: package attribute found outside of a package section')
+                ecatcher.Catch(lineno, 'package attribute found outside of '
+                               'a package section')
                 continue
 
             # package attribute
             try:
                 key, value = line.lstrip('\t').split(' = ', 1)
             except ValueError:
-                print('ERROR: unexpected attribute format: section=%s, line=%s' % (
-                    current_package['pkgname'], line))
+                ecatcher.Catch(lineno, 'unexpected attribute format in '
+                               'section=%s' % current_package['pkgname'])
 
             if IsMultiValued(key):
                 if not current_package.get(key):
@@ -93,22 +121,45 @@ def ParseAurinfoFromIterable(iterable):
                 if not current_package.get(key):
                     current_package[key] = value
                 else:
-                    print('WARNING: overwriting attribute %s: %s -> %s' % (
-                        key, current_package[key], value))
+                    ecatcher.Catch(lineno, 'overwriting attribute '
+                                   '%s: %s -> %s' % (key, current_package[key],
+                                                     value))
 
     return aurinfo
 
 
-def ParseAurinfo(filename='.AURINFO'):
+def ParseAurinfo(filename='.AURINFO', ecatcher=None):
     with open(filename) as f:
-        return ParseAurinfoFromIterable(f)
+        return ParseAurinfoFromIterable(f, ecatcher)
+
+
+def ValidateAurinfo(filename='.AURINFO'):
+    ecatcher = CollectionECatcher()
+    ParseAurinfo(filename, ecatcher)
+    return not ecatcher.HasErrors()
 
 
 if __name__ == '__main__':
     pp = pprint.PrettyPrinter(indent=4)
-    aurinfo = ParseAurinfo()
-    for pkgname in aurinfo.GetPackageNames():
-        print(">>> merged package: %s" % pkgname)
-        pp.pprint(aurinfo.GetMergedPackage(pkgname))
-        print()
+
+    if len(sys.argv) == 1:
+        print('error: not enough arguments')
+        sys.exit(1)
+    elif len(sys.argv) == 2:
+        action = sys.argv[1]
+        filename = '.AURINFO'
+    else:
+        action, filename = sys.argv[1:3]
+
+    if action == 'parse':
+        aurinfo = ParseAurinfo()
+        for pkgname in aurinfo.GetPackageNames():
+            print(">>> merged package: %s" % pkgname)
+            pp.pprint(aurinfo.GetMergedPackage(pkgname))
+            print()
+    elif action == 'validate':
+        sys.exit(not ValidateAurinfo(filename))
+    else:
+        print('unknown action: %s' % action)
+        sys.exit(1)
 
