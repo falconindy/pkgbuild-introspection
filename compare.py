@@ -1,62 +1,89 @@
 #!/usr/bin/env python
 
-import glob
+import collections
 import os
-import string
 import subprocess
 import sys
+import tarfile
 
 from multiprocessing import Pool
 
 import parse_aurinfo
 
-TEST_KEYS = {
-    'Name': (False, 'pkgname'),
-    'Description': (False, 'pkgdesc'),
-    'URL': (False, 'url'),
-    'Licenses': (True, 'license'),
-    'Groups': (True, 'groups'),
-    'Provides': (True, 'provides'),
-    'Depends On': (True, 'depends'),
-    'Conflicts With': (True, 'conflicts'),
-    'Replaces': (True, 'replaces'),
+SECTION_TO_ATTR_MAP = {
+    '%NAME%': ('pkgname', False),
+    '%VERSION%': ('pkgver', False),
+    '%DESC%': ('pkgdesc', False),
+    '%LICENSE%': ('license', True),
+    '%URL%': ('url', False),
+    '%GROUPS%': ('groups', True),
+    '%MAKEDEPENDS%': ('makedepends', True),
+    '%CHECKDEPENDS%': ('checkdepends', True),
+    '%DEPENDS%': ('depends', True),
+    '%OPTDEPENDS%': ('optdepends', True),
+    '%PROVIDES%': ('provides', True),
+    '%CONFLICTS%': ('conflicts', True),
+    '%REPLACES%': ('replaces', True),
 }
 
+
+def SectionToPkgattr(section):
+    return SECTION_TO_ATTR_MAP.get(section)
+
+
+def IsSection(line):
+    return len(line) > 2 and line[0] == '%' and line[-1] == '%'
+
+
+def DbentryToDict(dbentry):
+    section = None
+    attrs = collections.defaultdict(list)
+
+    for line in dbentry:
+        line = line.decode().strip()
+        if not line:
+            section = None
+            continue
+
+        if IsSection(line):
+            section = SectionToPkgattr(line)
+            continue
+
+        if not section:
+            # this might be an error, but it's far more likely that it's
+            # just a section we don't care about.
+            continue
+
+        if section[1]:
+            # multi-valued
+            attrs[section[0]].append(line)
+        else:
+            # single-valued
+            attrs[section[0]] = line
+
+    return attrs
+
+
+def AlpmDbToDict(reponame):
+    path = '/var/lib/pacman/sync/%s.db' % reponame
+
+    packages = collections.defaultdict(dict)
+
+    with tarfile.open(path, 'r') as repotar:
+        for tarinfo in repotar:
+            if '/' not in tarinfo.name:
+                continue
+
+            pkgname, _, _ = tarinfo.name.rsplit('-', 2)
+
+            entries = DbentryToDict(repotar.extractfile(tarinfo))
+            packages[pkgname].update(entries)
+
+    return packages
+
+
 def output_of(argv, envp=None):
-    env = envp or os.environ
-    return subprocess.check_output(argv, env=env).decode().rstrip().split('\n')
-
-def package_from_repo(repo, pkgname):
-    repo_package = {}
-
-    pacout = output_of(['/usr/bin/pacman', '-Si', '%s/%s' % (repo, pkgname)],
-            envp={'LC_ALL': 'C'})
-
-    for line in pacout:
-        # lines not starting with a capital letter are probaly stupid optdeps
-        if line[0] not in string.ascii_uppercase:
-            continue
-
-        key, value = line.split(':', 1)
-        key = key.strip()
-
-        if key not in TEST_KEYS:
-            continue
-
-        values = value.strip()
-        if values == 'None':
-            continue
-
-        # maybe split...
-        if TEST_KEYS[key][0]:
-            values = values.split()
-
-        if  None:
-            continue
-
-        repo_package[TEST_KEYS[key][1]] = values
-
-    return repo_package
+    return subprocess.check_output(argv).decode().rstrip().split('\n')
 
 
 def strip_soarch(deplist):
@@ -72,11 +99,14 @@ def strip_soarch(deplist):
     return sanitized
 
 
-def compare(repo, package):
+def report_diff(pkgname, attrname, repovalue, parsedvalue):
+    print('DIFF(%s|%s):\n  repo   : %s\n  AURINFO: %s\n' % (
+        pkgname, attrname, repovalue, parsedvalue))
+
+
+def compare(repo_package, package):
     assert 'pkgname' in package
     pkgname = package['pkgname']
-
-    repo_package = package_from_repo(repo, pkgname)
 
     diffcount = 0
     for k, v in repo_package.items():
@@ -96,6 +126,18 @@ def compare(repo, package):
         if v == package[k]:
             continue
 
+        # Reconstruct the epoch:pkgver-pkgrel to compare against the DB value
+        if k == 'pkgver':
+            epoch = package.get('epoch')
+            if epoch:
+                fullver = '%s:%s-%s' % (epoch, package['pkgver'], package['pkgrel'])
+            else:
+                fullver = '%s-%s' % (package['pkgver'], package['pkgrel'])
+            if v != fullver:
+                report_diff(pkgname, k, v, fullver)
+                diffcount += 1
+            continue
+
         # Depends and provides might have soname architectures which won't
         # appear in the PKGBUILD.
         if k in ('depends', 'provides'):
@@ -108,14 +150,14 @@ def compare(repo, package):
             if ' '.join(v) == ' '.join(package[k]):
                 continue
 
-        print('DIFF(%s|%s):\n  repo   : %s\n  AURINFO: %s\n' % (pkgname, k, v, package[k]))
+        report_diff(pkgname, k, v, package[k])
         diffcount += 1
 
     return diffcount
 
-def CompareOne(repo, pkgname):
+def CompareOne(reponame, alpmdb, pkgname):
     # parse the PKGBUILD into .AURINFO
-    aurinfo = output_of(['./introspect', '%s/%s' % (repo, pkgname)])
+    aurinfo = output_of(['./introspect', '%s/%s' % (reponame, pkgname)])
 
     # i'm misunderstanding the pythonic way of doing this....
     parsed_aurinfo = parse_aurinfo.ParseAurinfoFromIterable(aurinfo)
@@ -124,7 +166,7 @@ def CompareOne(repo, pkgname):
 
     for p in parsed_aurinfo.GetPackageNames():
         package = parsed_aurinfo.GetMergedPackage(p)
-        diffs += compare(repo, package)
+        diffs += compare(alpmdb.get(p), package)
         total_attrs += len(package)
 
     return diffs, total_attrs
@@ -150,10 +192,11 @@ def PrintStatistics(stats):
 
 
 class Comparator(object):
-    def __init__(self, repo):
-        self._repo = repo
-    def __call__(self, pkg):
-        return CompareOne(self._repo, pkg)
+    def __init__(self, reponame, alpmdb):
+        self._alpmdb = alpmdb
+        self._reponame = reponame
+    def __call__(self, pkgname):
+        return CompareOne(self._reponame, self._alpmdb, pkgname)
 
 
 class PkgbuildExists(object):
@@ -164,19 +207,17 @@ class PkgbuildExists(object):
 
 def main(argv):
     subjects = []
-    if '/' in argv[1]:
-        repo, pkg = argv[1].split('/')
-        subjects.append(pkg)
-    else:
-        repo = argv[1]
-        subjects = output_of(['pacman', '-Slq', repo])
+    reponame = argv[1]
 
-    pkgs = filter(PkgbuildExists(repo), subjects)
+    alpmdb = AlpmDbToDict(reponame)
+    subjects = alpmdb.keys()
+
+    pkgs = filter(PkgbuildExists(reponame), subjects)
     if not pkgs:
         sys.exit(1)
 
     pool = Pool(20)
-    diffstats = pool.map(Comparator(repo), pkgs)
+    diffstats = pool.map(Comparator(reponame, alpmdb), pkgs)
     pool.close()
     pool.join()
 
