@@ -17,6 +17,12 @@ all: $(BINPROGS)
 	$(edit)
 	@bash -O extglob -n $@
 
+install-bin: $(BINPROGS)
+	install -dm755 $(DESTDIR)$(PREFIX)/bin
+	install -m755 $(BINPROGS) $(DESTDIR)$(PREFIX)/bin
+
+install: install-bin
+
 clean:
 	$(RM) $(BINPROGS)
 
@@ -25,3 +31,4 @@ smoketest:
 		do echo testing $$repo; time ./compare.py $$repo >$$repo.log; \
 	done
 
+.PHONY: smoketest clean
