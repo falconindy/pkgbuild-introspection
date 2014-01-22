@@ -27,6 +27,22 @@ SECTION_TO_ATTR_MAP = {
 }
 
 
+class DiffCounter(object):
+    def __init__(self):
+        self._diffcount = 0
+
+    def Count(self):
+        return self._diffcount
+
+    def Report(self, pkgname, attrname, repovalue, parsedvalue):
+        print('DIFF(%s|%s):\n  repo   : %s\n  AURINFO: %s\n' % (
+            pkgname, attrname, repovalue, parsedvalue))
+        self.Increment()
+
+    def Increment(self):
+        self._diffcount += 1
+
+
 def SectionToPkgattr(section):
     return SECTION_TO_ATTR_MAP.get(section)
 
@@ -99,7 +115,7 @@ def strip_soarch(deplist):
     return sanitized
 
 
-def report_diff(pkgname, attrname, repovalue, parsedvalue):
+def ReportDiff(pkgname, attrname, repovalue, parsedvalue):
     print('DIFF(%s|%s):\n  repo   : %s\n  AURINFO: %s\n' % (
         pkgname, attrname, repovalue, parsedvalue))
 
@@ -108,16 +124,16 @@ def compare(repo_package, package):
     assert 'pkgname' in package
     pkgname = package['pkgname']
 
-    diffcount = 0
+    diffcount = DiffCounter()
     for k, v in repo_package.items():
         if k not in package:
-            diffcount += 1
+            diffcount.Increment()
             print("DIFF(%s): attribute %s in repo, not in AURINFO" % (pkgname, k))
             print('          repo   : %s' % v)
             continue
 
         if v == 'None' and package[k]:
-            diffcount += 1
+            diffcount.Increment()
             print('DIFF(%s): attribute %s in AURINFO, not in repo' % (pkgname, k))
             print('          AURINFO: %s' % package[k])
             continue
@@ -134,8 +150,7 @@ def compare(repo_package, package):
             else:
                 fullver = '%s-%s' % (package['pkgver'], package['pkgrel'])
             if v != fullver:
-                report_diff(pkgname, k, v, fullver)
-                diffcount += 1
+                diffcount.Report(pkgname, k, v, fullver)
             continue
 
         # Depends and provides might have soname architectures which won't
@@ -150,10 +165,9 @@ def compare(repo_package, package):
             if ' '.join(v) == ' '.join(package[k]):
                 continue
 
-        report_diff(pkgname, k, v, package[k])
-        diffcount += 1
+        diffcount.Report(pkgname, k, v, package[k])
 
-    return diffcount
+    return diffcount.Count()
 
 def CompareOne(reponame, alpmdb, pkgname):
     # parse the PKGBUILD into .AURINFO
