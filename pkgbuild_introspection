@@ -61,7 +61,7 @@ pkgbuild_get_array_attribute() {
     # if global_var == function_var, don't set an override
     array_build 'global_var' "$2"
     array_build 'function_var' "$3"
-    if [[ $1 && ${global_var[*]} = "${function_var[@]}" ]]; then
+    if [[ ${global_var[*]} = "${function_var[@]}" ]]; then
       unset "$3"
     fi
   else
