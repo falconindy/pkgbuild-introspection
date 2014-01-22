@@ -53,12 +53,12 @@ mkaurball() {
   fi
 
   if [[ $srcinfo_path ]]; then
-    if ! srcinfo_create >"$tmpdir/$tarball_basename/.AURINFO"; then
-      die 'Failed to write .AURINFO'
-    fi
-  else
     if ! cp "$srcinfo_path" "$tmpdir/$tarball_basename/.AURINFO"; then
       die 'Failed to add %s to tarball' "$srcinfo_path"
+    fi
+  else
+    if ! srcinfo_create >"$tmpdir/$tarball_basename/.AURINFO"; then
+      die 'Failed to write .AURINFO'
     fi
   fi
 
