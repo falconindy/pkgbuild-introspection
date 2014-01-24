@@ -97,7 +97,7 @@ pkgbuild_get_attribute() {
     extract_function_var "package_$1" "$2" 0 "$3"
 
     # if global_var == function_var, don't set an override
-    if [[ $1 && ${!2} = "${!3}" ]]; then
+    if [[ ${!2} = "${!3}" ]]; then
       unset "$3"
     fi
   else
