@@ -101,12 +101,12 @@ def ParseAurinfoFromIterable(iterable, ecatcher=None):
             else:
                 current_package = aurinfo.AddPackage(value)
         else:
+            # package attribute
             if current_package is None:
                 ecatcher.Catch(lineno, 'package attribute found outside of '
                                'a package section')
                 continue
 
-            # package attribute
             try:
                 key, value = line.lstrip('\t').split(' = ', 1)
             except ValueError:
