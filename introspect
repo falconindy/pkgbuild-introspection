@@ -5,7 +5,7 @@
 if [[ -f $1 ]]; then
   srcinfo_create_from_pkgbuild "$1"
 else
-  srcinfo_create_from_pkgbuild "/var/abs/$1/PKGBUILD"
+  srcinfo_create_from_pkgbuild "${ABSROOT:-/var/abs}/$1/PKGBUILD"
 fi
 
 # vim: set et ts=2 sw=2:
