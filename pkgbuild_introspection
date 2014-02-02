@@ -114,10 +114,9 @@ srcinfo_end_section() {
 }
 
 srcinfo_write_attr() {
-  # $1: pkgname (pass an empty string for global level)
-  # $2: architecture (empty string for arch-independent metadata)
-  # $3: attr name
-  # $4: attr value
+  # $1: architecture (empty string for arch-independent metadata)
+  # $2: attr name
+  # $3: attr values
 
   local fmtstring arch=$1 attrname=$2 attrvalues=("${@:3}")
 
