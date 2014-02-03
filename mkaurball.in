@@ -14,17 +14,18 @@ die() {
 }
 
 usage() {
-  echo 'mkaurball v@VERSION@'
-  echo
-  echo 'mkaurball wraps the process of creating a source tarball with an'
-  echo '.AURINFO file, suitable for submission to the AUR.'
-  echo
-  echo 'Usage: mkaurball [options]'
-  echo
-  echo '    -a <file>  package <file> as .AURINFO'
-  echo '    -e         edit .AURINFO before repackaging'
-  echo '    -f         pass the --force flag to makepkg'
-  echo '    -h         display this help message and exit'
+  printf '%s\n'
+      'mkaurball v@VERSION@' \
+      '' \
+      'mkaurball wraps the process of creating a source tarball with an' \
+      '.AURINFO file, suitable for submission to the AUR.' \
+      '' \
+      'Usage: mkaurball [options]' \
+      '' \
+      '    -a <file>  package <file> as .AURINFO' \
+      '    -e         edit .AURINFO before repackaging' \
+      '    -f         pass the --force flag to makepkg' \
+      '    -h         display this help message and exit'
 }
 
 mkaurball() {
