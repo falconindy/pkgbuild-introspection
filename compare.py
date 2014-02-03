@@ -216,13 +216,13 @@ class Comparator(object):
 class PkgbuildExists(object):
     def __init__(self, repo):
         self._repo = repo
+        self._absroot = os.getenv('ABSROOT') or '/var/abs'
     def __call__(self, pkg):
-        return os.access("/var/abs/%s/%s/PKGBUILD" % (self._repo, pkg), os.R_OK)
+        return os.access('%s/%s/%s/PKGBUILD' %
+                (self._absroot, self._repo, pkg), os.R_OK)
 
 def main(argv):
-    subjects = []
     reponame = argv[1]
-
     alpmdb = AlpmDbToDict(reponame)
     subjects = alpmdb.keys()
 
