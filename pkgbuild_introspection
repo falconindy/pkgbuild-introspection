@@ -205,8 +205,18 @@ srcinfo_create() {
   done
 }
 
+clear_environment() {
+  # optimized for small exclusion lists.
+  mapfile -t environ < <(compgen -A variable | grep -xvF "$(printf '%s\n' "$@")")
+
+  # expect that some variables marked read only will complain here
+  unset -v "${environ[@]}" 2>/dev/null
+}
+
 srcinfo_create_from_pkgbuild() {
   (
+    clear_environment PATH
+
     shopt -u extglob
     . "$1" || exit 1
     shopt -s extglob
