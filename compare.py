@@ -10,20 +10,22 @@ from multiprocessing import Pool
 
 import parse_aurinfo
 
+Attr = collections.namedtuple('Attr', ['name', 'multivalued'])
+
 SECTION_TO_ATTR_MAP = {
-    '%NAME%': ('pkgname', False),
-    '%VERSION%': ('pkgver', False),
-    '%DESC%': ('pkgdesc', False),
-    '%LICENSE%': ('license', True),
-    '%URL%': ('url', False),
-    '%GROUPS%': ('groups', True),
-    '%MAKEDEPENDS%': ('makedepends', True),
-    '%CHECKDEPENDS%': ('checkdepends', True),
-    '%DEPENDS%': ('depends', True),
-    '%OPTDEPENDS%': ('optdepends', True),
-    '%PROVIDES%': ('provides', True),
-    '%CONFLICTS%': ('conflicts', True),
-    '%REPLACES%': ('replaces', True),
+    '%NAME%': Attr('pkgname', False),
+    '%VERSION%': Attr('pkgver', False),
+    '%DESC%': Attr('pkgdesc', False),
+    '%LICENSE%': Attr('license', True),
+    '%URL%': Attr('url', False),
+    '%GROUPS%': Attr('groups', True),
+    '%MAKEDEPENDS%': Attr('makedepends', True),
+    '%CHECKDEPENDS%': Attr('checkdepends', True),
+    '%DEPENDS%': Attr('depends', True),
+    '%OPTDEPENDS%': Attr('optdepends', True),
+    '%PROVIDES%': Attr('provides', True),
+    '%CONFLICTS%': Attr('conflicts', True),
+    '%REPLACES%': Attr('replaces', True),
 }
 
 
@@ -70,12 +72,10 @@ def DbentryToDict(dbentry):
             # just a section we don't care about.
             continue
 
-        if section[1]:
-            # multi-valued
-            attrs[section[0]].append(line)
+        if section.multivalued:
+            attrs[section.name].append(line)
         else:
-            # single-valued
-            attrs[section[0]] = line
+            attrs[section.name] = line
 
     return attrs
 
