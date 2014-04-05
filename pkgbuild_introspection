@@ -118,22 +118,16 @@ srcinfo_write_attr() {
   # $2: attr name
   # $3: attr values
 
-  local fmtstring arch=$1 attrname=$2 attrvalues=("${@:3}")
+  local arch=$1 attrname=$2 attrvalues=("${@:3}")
 
   [[ $attrvalues ]] || return 0
-
-  if [[ $arch ]]; then
-    fmtstring+="$attrname@$arch = %s"
-  else
-    fmtstring+="$attrname = %s"
-  fi
 
   # normalize whitespace, strip leading and trailing
   attrvalues=("${attrvalues[@]//+([[:space:]])/ }")
   attrvalues=("${attrvalues[@]#[[:space:]]}")
   attrvalues=("${attrvalues[@]%[[:space:]]}")
 
-  printf "\t$fmtstring\n" "${attrvalues[@]}"
+  printf "\t$attrname${arch:+@}$arch = %s\n" "${attrvalues[@]}"
 }
 
 pkgbuild_extract_to_srcinfo() {
