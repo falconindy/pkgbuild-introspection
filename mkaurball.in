@@ -14,7 +14,7 @@ die() {
 }
 
 usage() {
-  printf '%s\n'
+  printf '%s\n' \
       'mkaurball v@VERSION@' \
       '' \
       'mkaurball wraps the process of creating a source tarball with an' \
