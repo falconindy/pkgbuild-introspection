@@ -36,9 +36,10 @@ extract_global_var() {
   local attr=$1 isarray=$2 outputvar=$3
 
   if (( isarray )); then
-    array_build "$outputvar" "$attr"
+    declare -n ref=$attr
+    [[ ${ref[@]} ]] && array_build "$outputvar" "$attr"
   else
-    printf -v "$outputvar" %s "${!attr}"
+    [[ -v $attr ]] && printf -v "$outputvar" %s "${!attr}"
   fi
 }
 
@@ -48,7 +49,7 @@ extract_function_var() {
   # $3: multivalued
   # $4: name of output var
 
-  local funcname=$1 attr=$2 isarray=$3 outputvar=$4 attr_regex= decl=
+  local funcname=$1 attr=$2 isarray=$3 outputvar=$4 attr_regex= decl= r=1
 
   if (( isarray )); then
     printf -v attr_regex '^[[:space:]]*(declare( -[[:alpha:]])*)? %q\+?=\(' "$2"
@@ -60,48 +61,27 @@ extract_function_var() {
     # strip leading whitespace and any usage of declare
     decl=${REPLY##*([[:space:]])?(declare +(-+([[:alpha:]]) ))}
     eval "${decl/#$attr/$outputvar}"
+
+    # entering this loop at all means we found a match, so notify the caller.
+    r=0
   done < <(funcgrep "$funcname" "$attr_regex")
-}
 
-pkgbuild_get_array_attribute() {
-  # $1: package name
-  # $2: attribute name
-  # $3: name of output var
-
-  local global_var function_var
-
-  printf -v "$3" %s ''
-
-  if [[ $1 ]]; then
-    extract_global_var "$2" 1 "$3"
-    extract_function_var "package_$1" "$2" 1 "$3"
-
-    # if global_var == function_var, don't set an override
-    if array_eq "$2" "$3"; then
-      unset "$3"
-    fi
-  else
-    extract_global_var "$2" 1 "$3"
-  fi
+  return $r
 }
 
 pkgbuild_get_attribute() {
   # $1: package name
   # $2: attribute name
   # $3: name of output var
+  # $4: multivalued
 
   printf -v "$3" %s ''
 
   if [[ $1 ]]; then
-    extract_global_var "$2" 0 "$3"
-    extract_function_var "package_$1" "$2" 0 "$3"
-
-    # if global_var == function_var, don't set an override
-    if [[ ${!2} = "${!3}" ]]; then
-      unset "$3"
-    fi
+    extract_global_var "$2" "$4" "$3"
+    extract_function_var "package_$1" "$2" "$4" "$3"
   else
-    extract_global_var "$2" 0 "$3"
+    extract_global_var "$2" "$4" "$3"
   fi
 }
 
@@ -120,8 +100,6 @@ srcinfo_write_attr() {
 
   local arch=$1 attrname=$2 attrvalues=("${@:3}")
 
-  [[ $attrvalues ]] || return 0
-
   # normalize whitespace, strip leading and trailing
   attrvalues=("${attrvalues[@]//+([[:space:]])/ }")
   attrvalues=("${attrvalues[@]#[[:space:]]}")
@@ -136,22 +114,17 @@ pkgbuild_extract_to_srcinfo() {
   # $3: attr name
   # $4: multivalued
 
-  local pkgname=$1 architecture=$2 attrname=$3 isarray=$4
-  unset outvalue
+  local pkgname=$1 architecture=$2 attrname=$3 isarray=$4 outvalue=
 
-  if (( isarray )); then
-    pkgbuild_get_array_attribute "$pkgname" "$attrname" 'outvalue'
+  if pkgbuild_get_attribute "$pkgname" "$attrname" 'outvalue' "$4"; then
     srcinfo_write_attr "$architecture" "$attrname" "${outvalue[@]}"
-  else
-    pkgbuild_get_attribute "$pkgname" "$attrname" 'outvalue'
-    srcinfo_write_attr "$architecture" "$attrname" "$outvalue"
   fi
 }
 
 srcinfo_create_global() {
   srcinfo_write_header 'pkgbase' "${pkgbase:-$pkgname}"
 
-  local singlevalued=(pkgname pkgdesc pkgver pkgrel epoch url install changelog)
+  local singlevalued=(pkgdesc pkgver pkgrel epoch url install changelog)
   local multivalued=(arch groups license checkdepends makedepends depends optdepends
                      provides conflicts replaces source noextract options backup)
 
