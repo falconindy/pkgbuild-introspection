@@ -75,13 +75,15 @@ pkgbuild_get_attribute() {
   # $3: name of output var
   # $4: multivalued
 
-  printf -v "$3" %s ''
+  local pkgname=$1 attrname=$2 outputvar=$3 isarray=$4
 
-  if [[ $1 ]]; then
-    extract_global_var "$2" "$4" "$3"
-    extract_function_var "package_$1" "$2" "$4" "$3"
+  printf -v "$outputvar" %s ''
+
+  if [[ $pkgname ]]; then
+    extract_global_var "$attrname" "$isarray" "$outputvar"
+    extract_function_var "package_$pkgname" "$attrname" "$isarray" "$outputvar"
   else
-    extract_global_var "$2" "$4" "$3"
+    extract_global_var "$attrname" "$isarray" "$outputvar"
   fi
 }
 
