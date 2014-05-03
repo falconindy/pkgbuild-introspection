@@ -1,3 +1,5 @@
-/__pycache__
+__pycache__
 /mkaurball
 /*.log
+/PKGBUILD
+/.AURINFO
