@@ -162,3 +162,4 @@ if __name__ == '__main__':
         print('unknown action: %s' % action)
         sys.exit(1)
 
+# vim: set et ts=4 sw=4:

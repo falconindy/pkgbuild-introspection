@@ -240,3 +240,5 @@ def main(argv):
 
 if __name__ == '__main__':
     main(sys.argv)
+
+# vim: set et ts=4 sw=4:
