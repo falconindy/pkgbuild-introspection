@@ -1,0 +1,62 @@
+#!/bin/bash
+#
+# regression tests an entire repo via ABS
+#
+# usage: ./regtest <repo[/package]> [reference]
+#
+#  repo: Should be the name of a repo which exists in $ABSROOT, e.g. 'core'
+#     or 'extra'. Optionally qualify with a package, e.g. 'core/perl'.
+#  reference: The git commitish describing the reference version to test
+#     against. By default, assumes 'HEAD' (assumes you work with unstaged
+#     changes).
+#
+
+. /etc/abs.conf
+
+reference_version=$(mktemp --tmpdir 'regtest.XXXXXX')
+
+git show "${2:-master}":pkgbuild_introspection >"$reference_version"
+
+trap "rm -f '$reference_version'" EXIT
+
+do_diff() {
+  diff -u <(. "$reference_version"; srcinfo_create_from_pkgbuild "$1") \
+    <(./introspect "$1") | awk '
+        {
+          if ($1 == "---")
+            print("--- reference")
+          else if ($1 == "+++")
+            print("+++ experimental")
+          else
+            print
+        }'
+
+  return ${PIPESTATUS[0]}
+}
+
+regtest_one() {
+  local out= pretty=${1%/PKGBUILD}
+
+  pretty=${pretty##*/}
+  out=$(do_diff "$1") || printf 'DIFF: package=%s\n%s\n\n' "$pretty" "$out"
+
+  [[ -z $out ]]
+}
+
+regtest_repo() {
+  local regressions=0 repo=$1
+
+  for pkgbuild in "$ABSROOT/$repo"/*/PKGBUILD; do
+    regtest_one "$pkgbuild" || (( ++regressions ))
+  done
+
+  (( regressions == 0 ))
+}
+
+if [[ $1 == */* ]]; then
+  regtest_one "$ABSROOT/$1/PKGBUILD"
+else
+  regtest_repo "$1"
+fi
+
+# vim: set et ts=2 sw=2:

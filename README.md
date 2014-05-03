@@ -6,6 +6,7 @@ This is a proof of concept used to extract metadata from PKGBUILDs.
     generated `.AURINFO` file
   - parse_aurinfo.py: an implementation of an `.AURINFO` parser
   - compare.py: compares `AURINFO` to repo data
+  - regtest: a regression tester tool
 
 End users should only really be interested in `mkaurball`. The remainder of these
 tools are intended for development and debugging purposes.
