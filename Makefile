@@ -49,7 +49,7 @@ dist:
 	git archive --format=tar --prefix=$(PACKAGE)-$(VER)/ $(VER) | gzip -9 >$(PACKAGE)-$(VER).tar.gz
 
 upload: dist
-	gpg --detach-sign $(PACKAGE)-$(VERSION).tar.gz
-	scp pkgfile-$(VERSION).tar.gz $(PACKAGE)-$(VERSION).tar.xz.sig code.falconindy.com:archive/$(PACKAGE)/
+	gpg --detach-sign $(PACKAGE)-$(VER).tar.gz
+	scp $(PACKAGE)-$(VER).tar.gz $(PACKAGE)-$(VER).tar.gz.sig code.falconindy.com:archive/$(PACKAGE)/
 
 .PHONY: regtest smoketest clean
