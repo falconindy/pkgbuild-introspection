@@ -1,3 +1,4 @@
+PACKAGE=pkgbuild-introspection
 VER=1
 
 PREFIX=/usr/local
@@ -43,5 +44,12 @@ smoketest-%:
 regtest: $(patsubst %, regtest-%, $(TESTREPOS))
 regtest-%:
 	$(V_TEST) test/regtest $* $(REFERENCE) >regtest.$*.log && rm regtest.$*.log
+
+dist:
+	git archive --format=tar --prefix=$(PACKAGE)-$(VER)/ $(VER) | gzip -9 >$(PACKAGE)-$(VER).tar.gz
+
+upload: dist
+	gpg --detach-sign $(PACKAGE)-$(VERSION).tar.gz
+	scp pkgfile-$(VERSION).tar.gz $(PACKAGE)-$(VERSION).tar.xz.sig code.falconindy.com:archive/$(PACKAGE)/
 
 .PHONY: regtest smoketest clean
