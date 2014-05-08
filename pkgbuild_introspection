@@ -8,10 +8,8 @@ array_build() {
 }
 
 array_eq() {
-  local i left right
-
-  array_build 'left' "$1"
-  array_build 'right' "$2"
+  declare -n left=$1 right=$2
+  local i
 
   (( ${#left[*]} == ${#right[*]} )) || return 1
 
@@ -37,6 +35,8 @@ extract_global_var() {
 
   if (( isarray )); then
     declare -n ref=$attr
+    # Still need to use array_build here because we can't handle the scoping
+    # semantics that would be included with the use of 'declare -n'.
     [[ ${ref[@]} ]] && array_build "$outputvar" "$attr"
   else
     [[ -v $attr ]] && printf -v "$outputvar" %s "${!attr}"
