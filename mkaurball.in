@@ -97,6 +97,12 @@ while getopts ':a:efh' flag; do
   esac
 done
 
+# automatically clean up after ourselves if it looks like this directory
+# isn't being used to build a package.
+if [[ ! -d src && ! -d pkg ]]; then
+  makepkg_args+=('--clean')
+fi
+
 mkaurball
 
 # vim: set et ts=2 sw=2:
