@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from copy import deepcopy
+from copy import copy, deepcopy
 import pprint
 import sys
 
@@ -67,6 +67,9 @@ class CollectionECatcher(ECatcherInterface):
 
     def HasErrors(self):
         return len(self._errors) > 0
+
+    def Errors(self):
+        return copy(self._errors)
 
 
 def ParseAurinfoFromIterable(iterable, ecatcher=None):
@@ -135,7 +138,10 @@ def ParseAurinfo(filename='.AURINFO', ecatcher=None):
 def ValidateAurinfo(filename='.AURINFO'):
     ecatcher = CollectionECatcher()
     ParseAurinfo(filename, ecatcher)
-    return not ecatcher.HasErrors()
+    errors = ecatcher.Errors()
+    for error in errors:
+        print('error on line %d: %s' % error, file=sys.stderr)
+    return not errors
 
 
 if __name__ == '__main__':
