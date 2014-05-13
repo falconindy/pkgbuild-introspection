@@ -7,21 +7,6 @@ array_build() {
   eval "$1=(\"\${$2[@]}\")"
 }
 
-array_eq() {
-  declare -n left=$1 right=$2
-  local i
-
-  (( ${#left[*]} == ${#right[*]} )) || return 1
-
-  for (( i = 0; i < ${#left[*]}; ++i )); do
-    if [[ ${left[@]:i:1} != ${right[@]:i:1} ]]; then
-      return 1
-    fi
-  done
-
-  return 0
-}
-
 funcgrep() {
   { declare -f "$1" || declare -f package; } 2>/dev/null | grep -E "$2"
 }
