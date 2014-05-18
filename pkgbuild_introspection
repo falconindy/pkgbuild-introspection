@@ -121,8 +121,9 @@ srcinfo_create_section_details() {
 }
 
 srcinfo_create_global() {
-  local multivalued=(arch groups license checkdepends makedepends depends optdepends
-                     provides conflicts replaces source noextract options backup)
+  local multivalued=(arch groups license checkdepends makedepends
+                     depends optdepends provides conflicts replaces
+                     source noextract options backup)
 
   srcinfo_open_section 'pkgbase' "${pkgbase:-$pkgname}"
   srcinfo_create_section_details ''
@@ -130,8 +131,8 @@ srcinfo_create_global() {
 }
 
 srcinfo_create_package() {
-  local multivalued=(arch groups license checkdepends makedepends depends optdepends
-                     provides conflicts replaces options backup)
+  local multivalued=(arch groups license checkdepends makedepends depends
+                     optdepends provides conflicts replaces options backup)
 
   srcinfo_open_section 'pkgname' "$1"
   srcinfo_create_section_details "$1"
@@ -139,8 +140,7 @@ srcinfo_create_package() {
 }
 
 srcinfo_create() {
-  local singlevalued=(pkgdesc pkgver pkgrel epoch url install changelog)
-  local pkg
+  local pkg singlevalued=(pkgdesc pkgver pkgrel epoch url install changelog)
 
   srcinfo_create_global
 
@@ -151,7 +151,8 @@ srcinfo_create() {
 
 clear_environment() {
   # optimized for small exclusion lists.
-  mapfile -t environ < <(compgen -A variable | grep -xvF "$(printf '%s\n' "$@")")
+  mapfile -t environ < <(compgen -A variable |
+      grep -xvF "$(printf '%s\n' "$@")")
 
   # expect that some variables marked read only will complain here
   unset -v "${environ[@]}" 2>/dev/null
