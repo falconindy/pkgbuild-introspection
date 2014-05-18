@@ -72,11 +72,11 @@ pkgbuild_get_attribute() {
   fi
 }
 
-srcinfo_write_header() {
+srcinfo_open_section() {
   printf '%s = %s\n' "$1" "$2"
 }
 
-srcinfo_end_section() {
+srcinfo_close_section() {
   echo
 }
 
@@ -103,52 +103,43 @@ pkgbuild_extract_to_srcinfo() {
 
   local pkgname=$1 architecture=$2 attrname=$3 isarray=$4 outvalue=
 
-  if pkgbuild_get_attribute "$pkgname" "$attrname" 'outvalue' "$4"; then
+  if pkgbuild_get_attribute "$pkgname" "$attrname" 'outvalue' "$isarray"; then
     srcinfo_write_attr "$architecture" "$attrname" "${outvalue[@]}"
   fi
 }
 
-srcinfo_create_global() {
-  local attr=
+srcinfo_create_section_details() {
+  local attr
 
-  local singlevalued=(pkgdesc pkgver pkgrel epoch url install changelog)
+  for attr in "${singlevalued[@]}"; do
+    pkgbuild_extract_to_srcinfo "$1" '' "$attr" 0
+  done
+
+  for attr in "${multivalued[@]}"; do
+    pkgbuild_extract_to_srcinfo "$1" '' "$attr" 1
+  done
+}
+
+srcinfo_create_global() {
   local multivalued=(arch groups license checkdepends makedepends depends optdepends
                      provides conflicts replaces source noextract options backup)
 
-  srcinfo_write_header 'pkgbase' "${pkgbase:-$pkgname}"
-
-  for attr in "${singlevalued[@]}"; do
-    pkgbuild_extract_to_srcinfo '' '' "$attr" 0
-  done
-
-  for attr in "${multivalued[@]}"; do
-    pkgbuild_extract_to_srcinfo '' '' "$attr" 1
-  done
-
-  srcinfo_end_section
+  srcinfo_open_section 'pkgbase' "${pkgbase:-$pkgname}"
+  srcinfo_create_section_details ''
+  srcinfo_close_section
 }
 
 srcinfo_create_package() {
-  local pkg=$1 attr=
-
-  local singlevalued=(pkgdesc pkgver pkgrel epoch url install changelog)
   local multivalued=(arch groups license checkdepends makedepends depends optdepends
                      provides conflicts replaces options backup)
 
-  srcinfo_write_header 'pkgname' "$pkg"
-
-  for attr in "${singlevalued[@]}"; do
-    pkgbuild_extract_to_srcinfo "$pkg" '' "$attr" 0
-  done
-
-  for attr in "${multivalued[@]}"; do
-    pkgbuild_extract_to_srcinfo "$pkg" '' "$attr" 1
-  done
-
-  srcinfo_end_section
+  srcinfo_open_section 'pkgname' "$1"
+  srcinfo_create_section_details "$1"
+  srcinfo_close_section
 }
 
 srcinfo_create() {
+  local singlevalued=(pkgdesc pkgver pkgrel epoch url install changelog)
   local pkg
 
   srcinfo_create_global
