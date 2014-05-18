@@ -109,11 +109,13 @@ pkgbuild_extract_to_srcinfo() {
 }
 
 srcinfo_create_global() {
-  srcinfo_write_header 'pkgbase' "${pkgbase:-$pkgname}"
+  local attr=
 
   local singlevalued=(pkgdesc pkgver pkgrel epoch url install changelog)
   local multivalued=(arch groups license checkdepends makedepends depends optdepends
                      provides conflicts replaces source noextract options backup)
+
+  srcinfo_write_header 'pkgbase' "${pkgbase:-$pkgname}"
 
   for attr in "${singlevalued[@]}"; do
     pkgbuild_extract_to_srcinfo '' '' "$attr" 0
@@ -127,22 +129,19 @@ srcinfo_create_global() {
 }
 
 srcinfo_create_package() {
-  local pkg=$1 attr= a=
+  local pkg=$1 attr=
+
+  local singlevalued=(pkgdesc pkgver pkgrel epoch url install changelog)
+  local multivalued=(arch groups license checkdepends makedepends depends optdepends
+                     provides conflicts replaces options backup)
 
   srcinfo_write_header 'pkgname' "$pkg"
 
-  # single-valued attributes
-  for attr in pkgdesc pkgver pkgrel epoch url install changelog; do
+  for attr in "${singlevalued[@]}"; do
     pkgbuild_extract_to_srcinfo "$pkg" '' "$attr" 0
   done
 
-  # multi-valued attributes
-  for attr in backup license groups; do
-    pkgbuild_extract_to_srcinfo "$pkg" '' "$attr" 1
-  done
-
-  # FIXME: these attribute should be architecture specific
-  for attr in depends optdepends provides conflicts replaces; do
+  for attr in "${multivalued[@]}"; do
     pkgbuild_extract_to_srcinfo "$pkg" '' "$attr" 1
   done
 
