@@ -68,7 +68,7 @@ mkaurball() {
     "${VISUAL:-${EDITOR:-vi}}" "$tmpdir/$tarball_basename/.AURINFO"
   fi
 
-  if ! bsdtar -C "$tmpdir" -czLf "$PWD/$tarball_fullname" "$tarball_basename"; then
+  if ! bsdtar -C "$tmpdir" -czLf "$tarball_fullname" "$tarball_basename"; then
     die 'Failed to repack tarball'
   fi
 }
