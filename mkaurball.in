@@ -89,10 +89,10 @@ while getopts ':a:efh' flag; do
       exit 0
       ;;
     :)
-      die "option '%s' requires an argument'" "$OPTARG"
+      die "option '-%s' requires an argument" "$OPTARG"
       ;;
     \?)
-      die "invalid option -- '$OPTARG'"
+      die "invalid option -- '-%s' (use -h for help)" "$OPTARG"
       ;;
   esac
 done
