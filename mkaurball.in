@@ -40,7 +40,7 @@ mkaurball() {
   fi
 
   tarball_basename=${pkgbase:-$pkgname}
-  tarball_fullname=$tarball_basename-${epoch+$epoch:}$pkgver-$pkgrel.src.tar.gz
+  tarball_fullname=$tarball_basename-${epoch:+$epoch:}$pkgver-$pkgrel.src.tar.gz
 
   if [[ ! -f $tarball_fullname ]]; then
     die 'Expected tarball name not found: %s' "$tarball_fullname"
