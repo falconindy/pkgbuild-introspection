@@ -4,6 +4,9 @@ m4_include(pkgbuild_introspection)
 
 makepkg_args=('--source')
 
+tmpdirs=()
+trap 'rm -rf "${tmpdirs[@]}"' EXIT
+
 error() {
   printf "ERROR: $1\n" "${@:2}" >&2
 }
@@ -28,6 +31,15 @@ usage() {
       '    -h         display this help message and exit'
 }
 
+mktempdir() {
+  local dir
+
+  dir=$(mktemp -d --tmpdir mkaurball.XXXXXX) || return 1
+  tmpdirs+=("$dir")
+
+  printf '%s\n' "$dir"
+}
+
 mkaurball() {
   local tarball_basename= tarball_fullname= tmpdir=
 
@@ -46,8 +58,7 @@ mkaurball() {
     die 'Expected tarball name not found: %s' "$tarball_fullname"
   fi
 
-  tmpdir=$(mktemp -d --tmpdir mkaurball.XXXXXX) || return
-  trap 'rm -rf "$tmpdir"' RETURN EXIT
+  tmpdir=$(mktempdir) || return
 
   if ! bsdtar -C "$tmpdir" -xf "$tarball_fullname"; then
     die 'Failed to unpack tarball'
@@ -97,11 +108,7 @@ while getopts ':a:efh' flag; do
   esac
 done
 
-# automatically clean up after ourselves if it looks like this directory
-# isn't being used to build a package.
-if [[ ! -d src && ! -d pkg ]]; then
-  makepkg_args+=('--clean')
-fi
+export BUILDDIR=$(mktempdir)
 
 mkaurball
 
