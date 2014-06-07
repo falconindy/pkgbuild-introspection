@@ -48,17 +48,13 @@ class AurInfo(object):
         self._pkgbase = {'pkgname' : pkgbasename}
         return self._pkgbase
 
-class ECatcherInterface(object):
-    def Catch(self, lineno, error):
-        raise NotImplementedError
 
-
-class StderrECatcher(ECatcherInterface):
+class StderrECatcher(object):
     def Catch(self, lineno, error):
         print('ERROR[%d]: %s' % (lineno, error), file=sys.stderr)
 
 
-class CollectionECatcher(ECatcherInterface):
+class CollectionECatcher(object):
     def __init__(self):
         self._errors = []
 
