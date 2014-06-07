@@ -29,7 +29,7 @@ install-bin: $(BINPROGS)
 install: install-bin
 
 clean:
-	$(RM) $(BINPROGS)
+	$(RM) $(BINPROGS) *test-*.log
 
 TESTREPOS = \
 	core \
