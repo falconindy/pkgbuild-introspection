@@ -40,6 +40,14 @@ mktempdir() {
   printf '%s\n' "$dir"
 }
 
+fakeroot() {
+  if type -p fakeroot >/dev/null; then
+    command fakeroot "$@"
+  else
+    "$@"
+  fi
+}
+
 mkaurball() {
   local tarball_basename= tarball_fullname= tmpdir=
 
@@ -65,6 +73,7 @@ mkaurball() {
   fi
 
   if [[ $srcinfo_path ]]; then
+    # TODO: validate the .AURINFO
     if ! cp "$srcinfo_path" "$tmpdir/$tarball_basename/.AURINFO"; then
       die 'Failed to add %s to tarball' "$srcinfo_path"
     fi
@@ -75,11 +84,11 @@ mkaurball() {
   fi
 
   if (( edit_srcinfo )); then
-    # TODO: validate the edited .AURINFO
+    # TODO: validate the .AURINFO
     "${VISUAL:-${EDITOR:-vi}}" "$tmpdir/$tarball_basename/.AURINFO"
   fi
 
-  if ! bsdtar -C "$tmpdir" -czLf "$tarball_fullname" "$tarball_basename"; then
+  if ! fakeroot bsdtar -C "$tmpdir" -czLf "$tarball_fullname" "$tarball_basename"; then
     die 'Failed to repack tarball'
   fi
 }
