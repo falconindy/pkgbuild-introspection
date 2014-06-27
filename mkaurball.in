@@ -3,6 +3,7 @@
 m4_include(pkgbuild_introspection)
 
 makepkg_args=('--source')
+buildfile=PKGBUILD
 
 tmpdirs=()
 trap 'rm -rf "${tmpdirs[@]}"' EXIT
@@ -28,6 +29,7 @@ usage() {
       '    -a <file>  package <file> as .AURINFO' \
       '    -e         edit .AURINFO before repackaging' \
       '    -f         pass the --force flag to makepkg' \
+      '    -p <file>  use <file> as PKGBUILD' \
       '    -h         display this help message and exit'
 }
 
@@ -51,8 +53,8 @@ fakeroot() {
 mkaurball() {
   local tarball_basename= tarball_fullname= tmpdir=
 
-  if ! . ./PKGBUILD; then
-    die 'Unable to source %s/PKGBUILD' "$PWD"
+  if ! . -- "$buildfile"; then
+    die 'Unable to source %s/%s' "$PWD" "$buildfile"
   fi
 
   if ! makepkg "${makepkg_args[@]}"; then
@@ -93,7 +95,7 @@ mkaurball() {
   fi
 }
 
-while getopts ':a:efh' flag; do
+while getopts ':a:efp:h' flag; do
   case $flag in
     a)
       srcinfo_path=$OPTARG
@@ -103,6 +105,9 @@ while getopts ':a:efh' flag; do
       ;;
     f)
       makepkg_args+=('--force')
+      ;;
+    p)
+      buildfile=$OPTARG
       ;;
     h)
       usage
@@ -116,6 +121,7 @@ while getopts ':a:efh' flag; do
       ;;
   esac
 done
+makepkg_args+=("-p" "$buildfile")
 
 mktempdir BUILDDIR || exit
 export BUILDDIR
