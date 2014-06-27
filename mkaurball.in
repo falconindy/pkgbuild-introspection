@@ -32,12 +32,12 @@ usage() {
 }
 
 mktempdir() {
-  local dir
+  local _d
 
-  dir=$(mktemp -d --tmpdir mkaurball.XXXXXX) || return 1
-  tmpdirs+=("$dir")
+  _d=$(mktemp -d --tmpdir mkaurball.XXXXXX) || return 1
+  tmpdirs+=("$_d")
 
-  printf '%s\n' "$dir"
+  printf -v "$1" '%s' "$_d"
 }
 
 fakeroot() {
@@ -66,7 +66,7 @@ mkaurball() {
     die 'Expected tarball name not found: %s' "$tarball_fullname"
   fi
 
-  tmpdir=$(mktempdir) || return
+  mktempdir 'tmpdir' || return
 
   if ! bsdtar -C "$tmpdir" -xf "$tarball_fullname"; then
     die 'Failed to unpack tarball'
@@ -117,7 +117,8 @@ while getopts ':a:efh' flag; do
   esac
 done
 
-export BUILDDIR=$(mktempdir)
+mktempdir BUILDDIR || exit
+export BUILDDIR
 
 mkaurball
 
