@@ -23,7 +23,7 @@ usage() {
       'mkaurball wraps the process of creating a source tarball with an' \
       '.AURINFO file, suitable for submission to the AUR.' \
       '' \
-      'Usage: mkaurball [options]' \
+      'Usage: mkaurball [options] -- [makepkg options]' \
       '' \
       '    -a <file>  package <file> as .AURINFO' \
       '    -e         edit .AURINFO before repackaging' \
@@ -116,6 +116,8 @@ while getopts ':a:efh' flag; do
       ;;
   esac
 done
+shift $(( OPTIND - 1 ))
+makepkg_args+=("$@")
 
 mktempdir BUILDDIR || exit
 export BUILDDIR
