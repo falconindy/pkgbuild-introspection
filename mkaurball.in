@@ -90,7 +90,9 @@ mkaurball() {
     "${VISUAL:-${EDITOR:-vi}}" "$tmpdir/$tarball_basename/.AURINFO"
   fi
 
-  if ! fakeroot bsdtar -C "$tmpdir" -czLf "$tarball_fullname" "$tarball_basename"; then
+  # chmod files before re-tarring. This enforces that all files are 644 or 755.
+  if ! fakeroot -- sh -c 'chmod og=rX -R "$1/$2" && bsdtar -C "$1" -czLf "$3" "$2"' \
+      _ "$tmpdir" "$tarball_basename" "$tarball_fullname"; then
     die 'Failed to repack tarball'
   fi
 }
