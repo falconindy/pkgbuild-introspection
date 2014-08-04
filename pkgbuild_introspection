@@ -1,8 +1,18 @@
 shopt -s extglob
 
 array_build() {
-  # maybe this should handle sparse arrays?
-  eval "$1=(\"\${$2[@]}\")"
+  local i keys values
+
+  # Build an array of the indicies of the source array.
+  eval "keys=(\"\${!$2[@]}\")"
+
+  # Read values indirectly via their index. This approach gives us support
+  # for associative arrays and sparse arrays.
+  for i in "${keys[@]}"; do
+    values+=("$1[$i]=$(eval printf %q \""\${$2[$i]}\"")")
+  done
+
+  eval "${values[*]}"
 }
 
 funcgrep() {
