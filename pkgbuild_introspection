@@ -157,10 +157,10 @@ clear_environment() {
 }
 
 srcinfo_create_from_pkgbuild() {(
-    clear_environment PATH
+  clear_environment PATH
 
-    shopt -u extglob
-    . "$1" || exit 1
-    shopt -s extglob
-    srcinfo_create
+  shopt -u extglob
+  . "$1" || exit 1
+  shopt -s extglob
+  srcinfo_create
 )}
