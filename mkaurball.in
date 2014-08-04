@@ -1,6 +1,6 @@
 #!/bin/bash
 
-m4_include(pkgbuild_introspection)
+m4_include(pkgbuild_introspection.inc.sh)
 
 makepkg_args=('--source')
 buildfile=./PKGBUILD

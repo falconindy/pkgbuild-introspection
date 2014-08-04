@@ -15,7 +15,7 @@
 
 reference_version=$(mktemp --tmpdir 'regtest.XXXXXX')
 
-git show "${2:-master}":pkgbuild_introspection >"$reference_version"
+git show "${2:-master}":pkgbuild_introspection.inc.sh >"$reference_version"
 
 trap "rm -f '$reference_version'" EXIT
 

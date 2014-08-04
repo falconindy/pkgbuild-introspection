@@ -18,7 +18,7 @@ edit = $(V_GEN) m4 -P $@.in | sed 's/@VERSION@/$(VER)/g' >$@ && chmod go-w,+x $@
 
 all: $(BINPROGS)
 
-%: %.in pkgbuild_introspection
+%: %.in pkgbuild_introspection.inc.sh
 	$(edit)
 	@bash -O extglob -n $@
 

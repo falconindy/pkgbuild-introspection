@@ -1,6 +1,6 @@
 #!/bin/bash
 
-. "${0%/*}/pkgbuild_introspection"
+. "${0%/*}/pkgbuild_introspection.inc.sh"
 
 if [[ -f $1 ]]; then
   srcinfo_create_from_pkgbuild "$1"
