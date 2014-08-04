@@ -1,5 +1,5 @@
 PACKAGE=pkgbuild-introspection
-VER=3
+VER=4
 
 PREFIX=/usr/local
 
