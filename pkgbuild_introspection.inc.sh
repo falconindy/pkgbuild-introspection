@@ -1,15 +1,18 @@
 shopt -s extglob
 
 array_build() {
-  local i keys values
+  local dest=$1 src=$2 i keys values
+
+  # it's an error to try to copy a value which doesn't exist.
+  declare -p "$2" &>/dev/null || return 1
 
   # Build an array of the indicies of the source array.
   eval "keys=(\"\${!$2[@]}\")"
 
   # Read values indirectly via their index. This approach gives us support
-  # for associative arrays and sparse arrays.
+  # for associative arrays, sparse arrays, and empty strings as elements.
   for i in "${keys[@]}"; do
-    values+=("$1[$i]=$(eval printf %q \""\${$2[$i]}\"")")
+    values+=("printf -v '$dest[$i]' %s \"\${$src[$i]}\";")
   done
 
   eval "${values[*]}"
