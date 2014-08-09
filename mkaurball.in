@@ -2,7 +2,11 @@
 
 m4_include(pkgbuild_introspection.inc.sh)
 
-makepkg_args=('--source')
+# FIXME: we pass --ignorearch because makepkg will refuse to make
+# a source package for an architecture other than one supported by
+# the PKGBUILD. This makes no sense since source tarball creation
+# is an architecture independent process.
+makepkg_args=('--source' '--ignorearch')
 buildfile=./PKGBUILD
 
 tmpdirs=()
