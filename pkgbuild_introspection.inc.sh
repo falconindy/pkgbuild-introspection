@@ -92,30 +92,47 @@ srcinfo_close_section() {
 }
 
 srcinfo_write_attr() {
-  # $1: architecture (empty string for arch-independent metadata)
-  # $2: attr name
-  # $3: attr values
+  # $1: attr name
+  # $2: attr values
 
-  local arch=$1 attrname=$2 attrvalues=("${@:3}")
+  local attrname=$1 attrvalues=("${@:2}")
 
   # normalize whitespace, strip leading and trailing
   attrvalues=("${attrvalues[@]//+([[:space:]])/ }")
   attrvalues=("${attrvalues[@]#[[:space:]]}")
   attrvalues=("${attrvalues[@]%[[:space:]]}")
 
-  printf "\t$attrname${arch:+@}$arch = %s\n" "${attrvalues[@]}"
+  printf "\t$attrname = %s\n" "${attrvalues[@]}"
+}
+
+is_arch_specific() {
+  local attrs=(source provides conflicts depends replaces optdepends
+               makedepends checkdepends)
+
+  for _ in "${attrs[@]}"; do
+    [[ $_ = "$1" ]] && return 0
+  done
+
+  return 1
 }
 
 pkgbuild_extract_to_srcinfo() {
   # $1: pkgname
-  # $2: architecute (empty string for arch-independent metadata)
-  # $3: attr name
-  # $4: multivalued
+  # $2: attr name
+  # $3: multivalued
 
-  local pkgname=$1 architecture=$2 attrname=$3 isarray=$4 outvalue=
+  local pkgname=$1 attrname=$2 isarray=$3 outvalue=
 
   if pkgbuild_get_attribute "$pkgname" "$attrname" 'outvalue' "$isarray"; then
-    srcinfo_write_attr "$architecture" "$attrname" "${outvalue[@]}"
+    srcinfo_write_attr "$attrname" "${outvalue[@]}"
+  fi
+
+  if is_arch_specific "$attrname"; then
+    for a in "${arch[@]}"; do
+      if pkgbuild_get_attribute "$pkgname" "${attrname}_$a" 'outvalue' "$isarray"; then
+        srcinfo_write_attr "$a" "${attrname}_$a" "${outvalue[@]}"
+      fi
+    done
   fi
 }
 
@@ -123,11 +140,11 @@ srcinfo_create_section_details() {
   local attr
 
   for attr in "${singlevalued[@]}"; do
-    pkgbuild_extract_to_srcinfo "$1" '' "$attr" 0
+    pkgbuild_extract_to_srcinfo "$1" "$attr" 0
   done
 
   for attr in "${multivalued[@]}"; do
-    pkgbuild_extract_to_srcinfo "$1" '' "$attr" 1
+    pkgbuild_extract_to_srcinfo "$1" "$attr" 1
   done
 }
 
