@@ -130,7 +130,7 @@ pkgbuild_extract_to_srcinfo() {
   if is_arch_specific "$attrname"; then
     for a in "${arch[@]}"; do
       if pkgbuild_get_attribute "$pkgname" "${attrname}_$a" 'outvalue' "$isarray"; then
-        srcinfo_write_attr "$a" "${attrname}_$a" "${outvalue[@]}"
+        srcinfo_write_attr "${attrname}_$a" "${outvalue[@]}"
       fi
     done
   fi
