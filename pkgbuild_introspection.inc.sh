@@ -151,7 +151,8 @@ srcinfo_create_section_details() {
 srcinfo_create_global() {
   local multivalued=(arch groups license checkdepends makedepends
                      depends optdepends provides conflicts replaces
-                     source noextract options backup)
+                     noextract options backup
+                     source {md5,sha{1,224,256,384,512}}sums)
 
   srcinfo_open_section 'pkgbase' "${pkgbase:-$pkgname}"
   srcinfo_create_section_details ''
