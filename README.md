@@ -1,12 +1,7 @@
-This is a proof of concept used to extract metadata from PKGBUILDs.
+# pkgbuild-introspection
 
-  - pkgbuild_introspection: the actual work is done here
-  - introspect: a test driver for `pkgbuild_introspection`
-  - mkaurball: creates a source tarball (ala `makepkg --source`) with a
-    generated `.AURINFO` file
-  - aurinfo.py: an implementation of an `.AURINFO` parser
-  - smoketest: compares `AURINFO` to repo data
-  - regtest: a regression tester tool
-
-End users should only really be interested in `mkaurball`. The remainder of these
-tools are intended for development and debugging purposes.
+This is a suite of tools which can be used to parse PKGBUILDs and create
+SRCINFO files. Most users will only be interested in the `mkaurball` utility
+which generates tarballs suitable for submission to Arch Linux's
+[AUR](https://aur.archlinux.org). The remainder of these tools are intended for
+development and debugging purposes.
