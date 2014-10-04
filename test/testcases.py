@@ -185,6 +185,22 @@ class TestPkgbuildToAurinfo(unittest.TestCase):
         self.assertEqual(['friendship', 'magic'], pb['ponies']['depends'])
         self.assertNotIn('depends_armv7h', pb['ponies'])
 
+    @unittest.expectedFailure
+    def test_ArchOverrideInPackage(self):
+        pb = testutil.parse_pkgbuild('''
+            pkgname=ponies
+            arch=('i686' 'x86_64')
+            depends=('friendship' 'magic')
+
+            package() {
+              arch=('any')
+              depends_x86_64=('ignore' 'me')
+            }
+        ''')
+        self.assertPackageNamesEqual(pb, ['ponies'])
+        self.assertEqual(['friendship', 'magic'], pb['ponies']['depends'])
+        self.assertNotIn('depends_x86_64', pb['ponies'])
+
 
 if __name__ == '__main__':
     unittest.main()
