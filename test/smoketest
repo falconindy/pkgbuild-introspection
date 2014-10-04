@@ -8,7 +8,7 @@ import tarfile
 
 from multiprocessing import Pool
 
-import parse_aurinfo
+import aurinfo
 
 Attr = collections.namedtuple('Attr', ['name', 'multivalued'])
 
@@ -174,7 +174,7 @@ def CompareOne(reponame, alpmdb, pkgname):
     aurinfo = output_of(['./introspect', '%s/%s' % (reponame, pkgname)])
 
     # i'm misunderstanding the pythonic way of doing this....
-    parsed_aurinfo = parse_aurinfo.ParseAurinfoFromIterable(aurinfo)
+    parsed_aurinfo = aurinfo.ParseAurinfoFromIterable(aurinfo)
 
     diffs, total_attrs = 0, 0
 

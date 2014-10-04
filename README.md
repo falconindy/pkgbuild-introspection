@@ -4,7 +4,7 @@ This is a proof of concept used to extract metadata from PKGBUILDs.
   - introspect: a test driver for `pkgbuild_introspection`
   - mkaurball: creates a source tarball (ala `makepkg --source`) with a
     generated `.AURINFO` file
-  - parse_aurinfo.py: an implementation of an `.AURINFO` parser
+  - aurinfo.py: an implementation of an `.AURINFO` parser
   - smoketest: compares `AURINFO` to repo data
   - regtest: a regression tester tool
 
