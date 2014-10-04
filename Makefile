@@ -31,6 +31,8 @@ install: install-bin
 clean:
 	$(RM) $(BINPROGS) *test-*.log
 
+check: unittests
+
 TESTREPOS = \
 	core \
 	extra \
@@ -44,6 +46,9 @@ smoketest-%:
 regtest: $(patsubst %, regtest-%, $(TESTREPOS))
 regtest-%:
 	$(V_TEST) test/regtest $* $(REFERENCE) >regtest.$*.log && rm regtest.$*.log
+
+unittests:
+	test/testcases.py
 
 dist:
 	git archive --format=tar --prefix=$(PACKAGE)-$(VER)/ $(VER) | gzip -9 >$(PACKAGE)-$(VER).tar.gz

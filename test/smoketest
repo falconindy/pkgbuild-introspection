@@ -9,6 +9,7 @@ import tarfile
 from multiprocessing import Pool
 
 import aurinfo
+import testutil
 
 Attr = collections.namedtuple('Attr', ['name', 'multivalued'])
 
@@ -171,7 +172,7 @@ def compare(repo_package, package):
 
 def CompareOne(reponame, alpmdb, pkgname):
     # parse the PKGBUILD into .AURINFO
-    aurinfo = output_of(['./introspect', '%s/%s' % (reponame, pkgname)])
+    aurinfo = testutil.OutputOf('./introspect', '/'.join((reponame, pkgname)))
 
     # i'm misunderstanding the pythonic way of doing this....
     parsed_aurinfo = aurinfo.ParseAurinfoFromIterable(aurinfo)
