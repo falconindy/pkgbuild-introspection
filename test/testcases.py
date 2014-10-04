@@ -92,6 +92,43 @@ class TestPkgbuildToAurinfo(unittest.TestCase):
         self.assertPackageNamesEqual(pb, ['ponies'])
         self.assertEqual("1", pb['ponies']['pkgver'])
 
+    def test_MultiLineArrays(self):
+        pb = testutil.parse_pkgbuild('''
+            pkgname=ponies
+            depends=(foo
+                     bar
+                     baz)
+        ''')
+        self.assertPackageNamesEqual(pb, ['ponies'])
+        self.assertEqual(['foo', 'bar', 'baz'], pb['ponies']['depends'])
+
+    def test_QuotedValues(self):
+        pb = testutil.parse_pkgbuild('''
+            pkgname=ponies
+            optdepends=("foo: for bar'ing baz")
+
+            package_ponies() {
+              license=('custom: PGL'
+                       'custom: EGL')
+            }
+        ''')
+        self.assertPackageNamesEqual(pb, ['ponies'])
+        self.assertEqual(['foo: for bar\'ing baz'], pb['ponies']['optdepends'])
+        self.assertEqual(['custom: PGL', 'custom: EGL'], pb['ponies']['license'])
+
+    def test_BraceExpansions(self):
+        pb = testutil.parse_pkgbuild('''
+            pkgname=ponies
+            depends=({magic,friendship})
+
+            package_ponies() {
+              provides=({applejack,pinkiepie}-pony)
+            }
+        ''')
+        self.assertPackageNamesEqual(pb, ['ponies'])
+        self.assertEqual(['magic', 'friendship'], pb['ponies']['depends'])
+        self.assertEqual(['applejack-pony', 'pinkiepie-pony'], pb['ponies']['provides'])
+
 
 if __name__ == '__main__':
     unittest.main()
