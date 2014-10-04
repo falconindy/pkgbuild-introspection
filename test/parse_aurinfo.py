@@ -19,6 +19,12 @@ MULTIVALUED_ATTRS = set([
     'source',
     'noextract',
     'backup',
+    'md5sums',
+    'sha1sums',
+    'sha224sums',
+    'sha256sums',
+    'sha384sums',
+    'sha512sums',
 ])
 
 def IsMultiValued(attr):
