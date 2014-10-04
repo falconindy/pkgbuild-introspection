@@ -161,8 +161,8 @@ srcinfo_create_global() {
 
 srcinfo_create_package() {
   local singlevalued=(pkgdesc url install changelog)
-  local multivalued=(arch groups license checkdepends makedepends depends
-                     optdepends provides conflicts replaces options backup)
+  local multivalued=(arch groups license checkdepends depends optdepends
+                     provides conflicts replaces options backup)
 
   srcinfo_open_section 'pkgname' "$1"
   srcinfo_create_section_details "$1"

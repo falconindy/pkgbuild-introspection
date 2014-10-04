@@ -92,6 +92,18 @@ class TestPkgbuildToAurinfo(unittest.TestCase):
         self.assertPackageNamesEqual(pb, ['ponies'])
         self.assertEqual("1", pb['ponies']['pkgver'])
 
+    def test_PackagesCannotOverrideMakedepends(self):
+        pb = testutil.parse_pkgbuild('''
+            pkgname=ponies
+            pkgver=1
+            makedepends=(friendship magic)
+            package() {
+              makedepends=(ignore me)
+            }
+        ''')
+        self.assertPackageNamesEqual(pb, ['ponies'])
+        self.assertEqual(['friendship', 'magic'], pb['ponies']['makedepends'])
+
     def test_MultiLineArrays(self):
         pb = testutil.parse_pkgbuild('''
             pkgname=ponies
