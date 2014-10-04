@@ -70,6 +70,16 @@ class TestPkgbuildToAurinfo(unittest.TestCase):
         self.assertPackageNamesEqual(pb, ['ponies-git'])
         self.assertEqual(['ponies'], pb['ponies-git']['provides'])
 
+    def test_GlobalVariableInPackage(self):
+        pb = testutil.parse_pkgbuild('''
+            pkgname=ponies-git
+            package_ponies-git() {
+              provides=("${pkgname%-git}")
+            }
+        ''')
+        self.assertPackageNamesEqual(pb, ['ponies-git'])
+        self.assertEqual(['ponies'], pb['ponies-git']['provides'])
+
     @unittest.expectedFailure
     def test_MultipleAttributesOnOneLine(self):
         pb = testutil.parse_pkgbuild('''
@@ -140,6 +150,39 @@ class TestPkgbuildToAurinfo(unittest.TestCase):
         self.assertPackageNamesEqual(pb, ['ponies'])
         self.assertEqual(['magic', 'friendship'], pb['ponies']['depends'])
         self.assertEqual(['applejack-pony', 'pinkiepie-pony'], pb['ponies']['provides'])
+
+    @unittest.expectedFailure
+    def test_NonAttrVariableInPackageAttr(self):
+        pb = testutil.parse_pkgbuild('''
+            pkgname=ponies
+
+            package() {
+              foo=bar
+              depends=("$foo")
+            }
+        ''')
+        self.assertPackageNamesEqual(pb, ['ponies'])
+        self.assertEqual(['bar'], pb['ponies']['depends'])
+
+    def test_ArchSpecificMultivalued(self):
+        pb = testutil.parse_pkgbuild('''
+            pkgname=ponies
+            arch=('x86_64')
+            depends_x86_64=('friendship' 'magic')
+        ''')
+        self.assertPackageNamesEqual(pb, ['ponies'])
+        self.assertEqual(['friendship', 'magic'], pb['ponies']['depends_x86_64'])
+
+    def test_IgnoresArchSpecificForUnsupportedArches(self):
+        pb = testutil.parse_pkgbuild('''
+            pkgname=ponies
+            arch=('x86_64')
+            depends=('friendship' 'magic')
+            depends_armv7h=('pain' 'suffering')
+        ''')
+        self.assertPackageNamesEqual(pb, ['ponies'])
+        self.assertEqual(['friendship', 'magic'], pb['ponies']['depends'])
+        self.assertNotIn('depends_armv7h', pb['ponies'])
 
 
 if __name__ == '__main__':
