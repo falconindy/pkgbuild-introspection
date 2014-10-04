@@ -181,6 +181,7 @@ class TestPkgbuildToAurinfo(unittest.TestCase):
             depends_armv7h=('pain' 'suffering')
         ''')
         self.assertPackageNamesEqual(pb, ['ponies'])
+        self.assertEqual(['x86_64'], pb['ponies']['arch'])
         self.assertEqual(['friendship', 'magic'], pb['ponies']['depends'])
         self.assertNotIn('depends_armv7h', pb['ponies'])
 

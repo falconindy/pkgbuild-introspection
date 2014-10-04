@@ -41,18 +41,21 @@ PKGBUILD_ATTRIBUTES = {
     'validpgpkeys': Attr('validpgpkeys',    True),
 }
 
-def IsMultiValued(attrname):
+def find_attr(attrname):
+    # exact match
     attr = PKGBUILD_ATTRIBUTES.get(attrname, None)
     if attr:
-        return attr.is_multivalued
+        return attr
 
-    # hrmmm, maybe it's an arch-specific attribute...
-    # XXX: this will fail as soon as _ shows up in any variable name.
-    found = filter(lambda n: attrname.startswith(n), PKGBUILD_ATTRIBUTES.keys())
-    if not found:
-        return False
+    # prefix match
+    # XXX: this could break in the future if PKGBUILD(5) ever
+    # introduces a key which is a subset of another.
+    for k in PKGBUILD_ATTRIBUTES.keys():
+        if attrname.startswith(k + '_'):
+            return PKGBUILD_ATTRIBUTES[k]
 
-    attr = PKGBUILD_ATTRIBUTES.get(list(found)[0], None)
+def IsMultiValued(attrname):
+    attr = find_attr(attrname)
     return attr and attr.is_multivalued
 
 class AurInfo(object):
