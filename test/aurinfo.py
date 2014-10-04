@@ -4,32 +4,56 @@ from copy import copy, deepcopy
 import pprint
 import sys
 
-MULTIVALUED_ATTRS = set([
-    'arch',
-    'groups',
-    'makedepends',
-    'checkdepends',
-    'optdepends',
-    'depends',
-    'provides',
-    'conflicts',
-    'replaces',
-    'options',
-    'license',
-    'source',
-    'noextract',
-    'backup',
-    'md5sums',
-    'sha1sums',
-    'sha224sums',
-    'sha256sums',
-    'sha384sums',
-    'sha512sums',
-])
+class Attr(object):
+    def __init__(self, name, is_multivalued=False, allow_arch_extensions=False):
+        self.name = name
+        self.is_multivalued = is_multivalued
+        self.allow_arch_extensions = allow_arch_extensions
 
-def IsMultiValued(attr):
-    return attr in MULTIVALUED_ATTRS
+PKGBUILD_ATTRIBUTES = {
+    'arch':         Attr('arch',            True),
+    'backup':       Attr('backup',          True),
+    'changelog':    Attr('changelog',       False),
+    'checkdepends': Attr('checkdepends',    True),
+    'conflicts':    Attr('conflicts',       True, True),
+    'depends':      Attr('depends',         True, True),
+    'epoch':        Attr('epoch',           False),
+    'groups':       Attr('groups',          True),
+    'install':      Attr('install',         False),
+    'license':      Attr('license',         True),
+    'makedepends':  Attr('makedepends',     True, True),
+    'md5sums':      Attr('md5sums',         True, True),
+    'noextract':    Attr('noextract',       True),
+    'optdepends':   Attr('optdepends',      True, True),
+    'options':      Attr('options',         True),
+    'pkgname':      Attr('pkgname',         False),
+    'pkgrel':       Attr('pkgrel',          False),
+    'pkgver':       Attr('pkgver',          False),
+    'provides':     Attr('provides',        True, True),
+    'replaces':     Attr('replaces',        True, True),
+    'sha1sums':     Attr('sha1sums',        True, True),
+    'sha224sums':   Attr('sha224sums',      True, True),
+    'sha256sums':   Attr('sha256sums',      True, True),
+    'sha384sums':   Attr('sha384sums',      True, True),
+    'sha512sums':   Attr('sha512sums',      True, True),
+    'source':       Attr('source',          True, True),
+    'url':          Attr('url',             False),
+    'validpgpkeys': Attr('validpgpkeys',    True),
+}
 
+def IsMultiValued(attrname):
+    attr = PKGBUILD_ATTRIBUTES.get(attrname, None)
+    if attr:
+        return attr.is_multivalued
+
+    # hrmmm, maybe it's an arch-specific attribute...
+    # XXX: this will fail as soon as _ shows up in any variable name.
+    found = filter(lambda n: attrname.startswith(n), PKGBUILD_ATTRIBUTES.keys())
+    if not found:
+        return False
+
+    attr = PKGBUILD_ATTRIBUTES.get(list(found)[0], None)
+    return attr and attr.is_multivalued
 
 class AurInfo(object):
     def __init__(self):
