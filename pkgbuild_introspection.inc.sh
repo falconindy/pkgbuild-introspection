@@ -160,6 +160,7 @@ srcinfo_create_global() {
 }
 
 srcinfo_create_package() {
+  local singlevalued=(pkgdesc url install changelog)
   local multivalued=(arch groups license checkdepends makedepends depends
                      optdepends provides conflicts replaces options backup)
 
