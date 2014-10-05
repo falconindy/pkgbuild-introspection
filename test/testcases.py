@@ -95,12 +95,18 @@ class TestPkgbuildToAurinfo(unittest.TestCase):
         pb = testutil.parse_pkgbuild('''
             pkgname=ponies
             pkgver=1
+            pkgrel=2
+            epoch=3
             package() {
               pkgver=2
+              pkgrel=3
+              epoch=4
             }
         ''')
         self.assertPackageNamesEqual(pb, ['ponies'])
         self.assertEqual("1", pb['ponies']['pkgver'])
+        self.assertEqual("2", pb['ponies']['pkgrel'])
+        self.assertEqual("3", pb['ponies']['epoch'])
 
     def test_PackagesCannotOverrideMakedepends(self):
         pb = testutil.parse_pkgbuild('''
