@@ -114,7 +114,7 @@ class TestPkgbuildToAurinfo(unittest.TestCase):
         self.assertPackageNamesEqual(pb, ['ponies'])
         self.assertEqual(['friendship', 'magic'], pb['ponies']['makedepends'])
 
-    def test_MultiLineArrays(self):
+    def test_HandlesMultiLineArrays(self):
         pb = testutil.parse_pkgbuild('''
             pkgname=ponies
             depends=(foo
@@ -124,7 +124,7 @@ class TestPkgbuildToAurinfo(unittest.TestCase):
         self.assertPackageNamesEqual(pb, ['ponies'])
         self.assertEqual(['foo', 'bar', 'baz'], pb['ponies']['depends'])
 
-    def test_QuotedValues(self):
+    def test_HandlesQuotedValues(self):
         pb = testutil.parse_pkgbuild('''
             pkgname=ponies
             optdepends=("foo: for bar'ing baz")
@@ -138,7 +138,7 @@ class TestPkgbuildToAurinfo(unittest.TestCase):
         self.assertEqual(['foo: for bar\'ing baz'], pb['ponies']['optdepends'])
         self.assertEqual(['custom: PGL', 'custom: EGL'], pb['ponies']['license'])
 
-    def test_BraceExpansions(self):
+    def test_HandlesBraceExpansions(self):
         pb = testutil.parse_pkgbuild('''
             pkgname=ponies
             depends=({magic,friendship})
@@ -152,7 +152,7 @@ class TestPkgbuildToAurinfo(unittest.TestCase):
         self.assertEqual(['applejack-pony', 'pinkiepie-pony'], pb['ponies']['provides'])
 
     @unittest.expectedFailure
-    def test_NonAttrVariableInPackageAttr(self):
+    def test_HandlesShellVarInPackageAttr(self):
         pb = testutil.parse_pkgbuild('''
             pkgname=ponies
 
@@ -164,7 +164,7 @@ class TestPkgbuildToAurinfo(unittest.TestCase):
         self.assertPackageNamesEqual(pb, ['ponies'])
         self.assertEqual(['bar'], pb['ponies']['depends'])
 
-    def test_ArchSpecificMultivalued(self):
+    def test_HandlesMutlivaitedArchSpecific(self):
         pb1 = testutil.parse_pkgbuild('''
             pkgname=ponies
             arch=('x86_64')
@@ -182,7 +182,7 @@ class TestPkgbuildToAurinfo(unittest.TestCase):
         ''')
         self.assertDictEqual(pb1, pb2)
 
-    def test_IgnoresArchSpecificForUnsupportedArches(self):
+    def test_IgnoresUnsupportedArchSpecificOverrideInGlobal(self):
         pb = testutil.parse_pkgbuild('''
             pkgname=ponies
             arch=('x86_64')
@@ -194,7 +194,7 @@ class TestPkgbuildToAurinfo(unittest.TestCase):
         self.assertEqual(['friendship', 'magic'], pb['ponies']['depends'])
         self.assertNotIn('depends_armv7h', pb['ponies'])
 
-    def test_ArchOverrideInPackage(self):
+    def test_IgnoresUnsupportedArchSpecificOverrideInPackage(self):
         pb = testutil.parse_pkgbuild('''
             pkgname=ponies
             arch=('i686' 'x86_64')
