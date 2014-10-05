@@ -118,7 +118,7 @@ pkgbuild_extract_to_srcinfo() {
 }
 
 srcinfo_create_section_details() {
-  local attr a
+  local attr package_arch a
   local arch_specific_attrs=(source provides conflicts depends replaces
                              optdepends makedepends checkdepends)
 
@@ -130,7 +130,8 @@ srcinfo_create_section_details() {
     pkgbuild_extract_to_srcinfo "$1" "$attr" 1
   done
 
-  for a in "${arch[@]}"; do
+  pkgbuild_get_attribute "$1" "arch" 'package_arch' 1
+  for a in "${package_arch[@]}"; do
     # any is special -- if you want e.g. 'depends_any', you're really looking
     # for 'depends'.
     [[ $a = any ]] && continue

@@ -165,13 +165,22 @@ class TestPkgbuildToAurinfo(unittest.TestCase):
         self.assertEqual(['bar'], pb['ponies']['depends'])
 
     def test_ArchSpecificMultivalued(self):
-        pb = testutil.parse_pkgbuild('''
+        pb1 = testutil.parse_pkgbuild('''
             pkgname=ponies
             arch=('x86_64')
             depends_x86_64=('friendship' 'magic')
         ''')
-        self.assertPackageNamesEqual(pb, ['ponies'])
-        self.assertEqual(['friendship', 'magic'], pb['ponies']['depends_x86_64'])
+        self.assertPackageNamesEqual(pb1, ['ponies'])
+        self.assertEqual(['friendship', 'magic'], pb1['ponies']['depends_x86_64'])
+
+        pb2 = testutil.parse_pkgbuild('''
+            pkgname=ponies
+            arch=('x86_64')
+            package() {
+              depends_x86_64=('friendship' 'magic')
+            }
+        ''')
+        self.assertDictEqual(pb1, pb2)
 
     def test_IgnoresArchSpecificForUnsupportedArches(self):
         pb = testutil.parse_pkgbuild('''
@@ -185,7 +194,6 @@ class TestPkgbuildToAurinfo(unittest.TestCase):
         self.assertEqual(['friendship', 'magic'], pb['ponies']['depends'])
         self.assertNotIn('depends_armv7h', pb['ponies'])
 
-    @unittest.expectedFailure
     def test_ArchOverrideInPackage(self):
         pb = testutil.parse_pkgbuild('''
             pkgname=ponies
