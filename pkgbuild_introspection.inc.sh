@@ -105,17 +105,6 @@ srcinfo_write_attr() {
   printf "\t$attrname = %s\n" "${attrvalues[@]}"
 }
 
-is_arch_specific() {
-  local attrs=(source provides conflicts depends replaces optdepends
-               makedepends checkdepends)
-
-  for _ in "${attrs[@]}"; do
-    [[ $_ = "$1" ]] && return 0
-  done
-
-  return 1
-}
-
 pkgbuild_extract_to_srcinfo() {
   # $1: pkgname
   # $2: attr name
@@ -126,18 +115,12 @@ pkgbuild_extract_to_srcinfo() {
   if pkgbuild_get_attribute "$pkgname" "$attrname" 'outvalue' "$isarray"; then
     srcinfo_write_attr "$attrname" "${outvalue[@]}"
   fi
-
-  if is_arch_specific "$attrname"; then
-    for a in "${arch[@]}"; do
-      if pkgbuild_get_attribute "$pkgname" "${attrname}_$a" 'outvalue' "$isarray"; then
-        srcinfo_write_attr "${attrname}_$a" "${outvalue[@]}"
-      fi
-    done
-  fi
 }
 
 srcinfo_create_section_details() {
-  local attr
+  local attr a
+  local arch_specific_attrs=(source provides conflicts depends replaces
+                             optdepends makedepends checkdepends)
 
   for attr in "${singlevalued[@]}"; do
     pkgbuild_extract_to_srcinfo "$1" "$attr" 0
@@ -145,6 +128,18 @@ srcinfo_create_section_details() {
 
   for attr in "${multivalued[@]}"; do
     pkgbuild_extract_to_srcinfo "$1" "$attr" 1
+  done
+
+  for a in "${arch[@]}"; do
+    # any is special -- if you want e.g. 'depends_any', you're really looking
+    # for 'depends'.
+    [[ $a = any ]] && continue
+
+    # XXX: It's only by coincidence that we can blindly mark all these attrs as
+    # multivalued. Be careful if/when more are added.
+    for attr in "${arch_specific_attrs[@]}"; do
+      pkgbuild_extract_to_srcinfo "$1" "${attr}_$a" 1
+    done
   done
 }
 
