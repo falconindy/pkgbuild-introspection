@@ -119,8 +119,8 @@ pkgbuild_extract_to_srcinfo() {
 
 srcinfo_write_section_details() {
   local attr package_arch a
-  local arch_specific_attrs=(source provides conflicts depends replaces
-                             optdepends makedepends checkdepends)
+  local multivalued_arch_attrs=(source provides conflicts depends replaces
+                                optdepends makedepends checkdepends)
 
   for attr in "${singlevalued[@]}"; do
     pkgbuild_extract_to_srcinfo "$1" "$attr" 0
@@ -132,13 +132,10 @@ srcinfo_write_section_details() {
 
   pkgbuild_get_attribute "$1" 'arch' 'package_arch' 1
   for a in "${package_arch[@]}"; do
-    # any is special -- if you want e.g. 'depends_any', you're really looking
-    # for 'depends'.
+    # 'any' is special. there's no support for, e.g. depends_any.
     [[ $a = any ]] && continue
 
-    # XXX: It's only by coincidence that we can blindly mark all these attrs as
-    # multivalued. Be careful if/when more are added.
-    for attr in "${arch_specific_attrs[@]}"; do
+    for attr in "${multivalued_arch_attrs[@]}"; do
       pkgbuild_extract_to_srcinfo "$1" "${attr}_$a" 1
     done
   done
