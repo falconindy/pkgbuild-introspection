@@ -176,7 +176,8 @@ srcinfo_create() {
 }
 
 clear_environment() {
-  # optimized for small exclusion lists.
+  local environ
+
   mapfile -t environ < <(compgen -A variable |
       grep -xvF "$(printf '%s\n' "$@")")
 
