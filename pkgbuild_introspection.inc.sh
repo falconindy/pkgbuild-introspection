@@ -142,6 +142,7 @@ srcinfo_write_section_details() {
 }
 
 srcinfo_write_global() {
+  local singlevalued=(pkgdesc pkgver pkgrel epoch url install changelog)
   local multivalued=(arch groups license checkdepends makedepends
                      depends optdepends provides conflicts replaces
                      noextract options backup
@@ -163,7 +164,7 @@ srcinfo_write_package() {
 }
 
 srcinfo_write() {
-  local pkg singlevalued=(pkgdesc pkgver pkgrel epoch url install changelog)
+  local pkg
 
   srcinfo_write_global
 
