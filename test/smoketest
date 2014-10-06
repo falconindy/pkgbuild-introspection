@@ -172,10 +172,10 @@ def compare(repo_package, package):
 
 def CompareOne(reponame, alpmdb, pkgname):
     # parse the PKGBUILD into .AURINFO
-    aurinfo = testutil.OutputOf('./introspect', '/'.join((reponame, pkgname)))
+    aurinfo_text = testutil.OutputOf('./introspect', '/'.join((reponame, pkgname)))
 
     # i'm misunderstanding the pythonic way of doing this....
-    parsed_aurinfo = aurinfo.ParseAurinfoFromIterable(aurinfo)
+    parsed_aurinfo = aurinfo.ParseAurinfoFromIterable(aurinfo_text)
 
     diffs, total_attrs = 0, 0
 
