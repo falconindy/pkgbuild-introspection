@@ -117,7 +117,7 @@ pkgbuild_extract_to_srcinfo() {
   fi
 }
 
-srcinfo_create_section_details() {
+srcinfo_write_section_details() {
   local attr package_arch a
   local arch_specific_attrs=(source provides conflicts depends replaces
                              optdepends makedepends checkdepends)
@@ -144,34 +144,34 @@ srcinfo_create_section_details() {
   done
 }
 
-srcinfo_create_global() {
+srcinfo_write_global() {
   local multivalued=(arch groups license checkdepends makedepends
                      depends optdepends provides conflicts replaces
                      noextract options backup
                      source {md5,sha{1,224,256,384,512}}sums)
 
   srcinfo_open_section 'pkgbase' "${pkgbase:-$pkgname}"
-  srcinfo_create_section_details ''
+  srcinfo_write_section_details ''
   srcinfo_close_section
 }
 
-srcinfo_create_package() {
+srcinfo_write_package() {
   local singlevalued=(pkgdesc url install changelog)
   local multivalued=(arch groups license checkdepends depends optdepends
                      provides conflicts replaces options backup)
 
   srcinfo_open_section 'pkgname' "$1"
-  srcinfo_create_section_details "$1"
+  srcinfo_write_section_details "$1"
   srcinfo_close_section
 }
 
-srcinfo_create() {
+srcinfo_write() {
   local pkg singlevalued=(pkgdesc pkgver pkgrel epoch url install changelog)
 
-  srcinfo_create_global
+  srcinfo_write_global
 
   for pkg in "${pkgname[@]}"; do
-    srcinfo_create_package "$pkg"
+    srcinfo_write_package "$pkg"
   done
 }
 
@@ -185,11 +185,11 @@ clear_environment() {
   unset -v "${environ[@]}" 2>/dev/null
 }
 
-srcinfo_create_from_pkgbuild() {(
+srcinfo_write_from_pkgbuild() {(
   clear_environment PATH
 
   shopt -u extglob
   . "$1" || exit 1
   shopt -s extglob
-  srcinfo_create
+  srcinfo_write
 )}
