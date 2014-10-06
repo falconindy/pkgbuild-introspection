@@ -68,10 +68,10 @@ extract_function_var() {
 pkgbuild_get_attribute() {
   # $1: package name
   # $2: attribute name
-  # $3: name of output var
-  # $4: multivalued
+  # $3: multivalued
+  # $4: name of output var
 
-  local pkgname=$1 attrname=$2 outputvar=$3 isarray=$4
+  local pkgname=$1 attrname=$2 isarray=$3 outputvar=$4
 
   printf -v "$outputvar" %s ''
 
@@ -112,7 +112,7 @@ pkgbuild_extract_to_srcinfo() {
 
   local pkgname=$1 attrname=$2 isarray=$3 outvalue=
 
-  if pkgbuild_get_attribute "$pkgname" "$attrname" 'outvalue' "$isarray"; then
+  if pkgbuild_get_attribute "$pkgname" "$attrname" "$isarray" 'outvalue'; then
     srcinfo_write_attr "$attrname" "${outvalue[@]}"
   fi
 }
@@ -130,7 +130,7 @@ srcinfo_write_section_details() {
     pkgbuild_extract_to_srcinfo "$1" "$attr" 1
   done
 
-  pkgbuild_get_attribute "$1" 'arch' 'package_arch' 1
+  pkgbuild_get_attribute "$1" 'arch' 1 'package_arch'
   for a in "${package_arch[@]}"; do
     # 'any' is special. there's no support for, e.g. depends_any.
     [[ $a = any ]] && continue
