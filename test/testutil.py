@@ -5,7 +5,8 @@ import subprocess
 import tempfile
 
 def OutputOf(*argv):
-    return subprocess.check_output(argv).decode().rstrip().split('\n')
+    return subprocess.check_output(
+            argv, stderr=subprocess.DEVNULL).decode().rstrip().split('\n')
 
 def parse_pkgbuild(pkgbuild_text):
     with tempfile.NamedTemporaryFile() as pkgbuild_file:

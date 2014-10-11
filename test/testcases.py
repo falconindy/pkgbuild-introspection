@@ -49,6 +49,19 @@ class TestPkgbuildToAurinfo(unittest.TestCase):
         self.assertEqual(['bar'], pb['applejack']['depends'])
         self.assertEqual(['foo'], pb['pinkiepie']['depends'])
 
+    def test_HandlesDeclareInGlobalAttrs(self):
+        pb = testutil.parse_pkgbuild('''
+            declare pkgbase=ponies
+            declare -a pkgname=('applejack' 'pinkiepie')
+            declare depends=('foo')
+            package_applejack() {
+              depends=('bar')
+            }
+        ''')
+        self.assertPackageNamesEqual(pb, ['applejack', 'pinkiepie'])
+        self.assertEqual(['bar'], pb['applejack']['depends'])
+        self.assertEqual(['foo'], pb['pinkiepie']['depends'])
+
     def test_PackageAttributeAppends(self):
         pb = testutil.parse_pkgbuild('''
             pkgbase=ponies
@@ -129,6 +142,31 @@ class TestPkgbuildToAurinfo(unittest.TestCase):
         ''')
         self.assertPackageNamesEqual(pb, ['ponies'])
         self.assertEqual(['foo', 'bar', 'baz'], pb['ponies']['depends'])
+
+    @unittest.expectedFailure
+    def test_HandlesMultiLineValuesInFunctions(self):
+        pb = testutil.parse_pkgbuild('''
+            pkgname=ponies
+            package_ponies() {
+              optdepends=('some:
+                           program')
+            }
+        ''')
+        self.assertPackageNamesEqual(pb, ['ponies'])
+        self.assertRegex(pb['ponies']['optdepends'][0], 'some:.*program')
+
+    def test_HandlesRegexyPackageNames(self):
+        pb = testutil.parse_pkgbuild('''
+            pkgname=('ponies+cake')
+            pkgver=1.2.3
+
+            package_ponies+cake() {
+              depends=('pie' 'apples')
+            }
+        ''')
+        self.assertPackageNamesEqual(pb, ['ponies+cake'])
+        self.assertEqual(['pie', 'apples'], pb['ponies+cake']['depends'])
+        self.assertEqual('1.2.3', pb['ponies+cake']['pkgver'])
 
     def test_HandlesQuotedValues(self):
         pb = testutil.parse_pkgbuild('''
