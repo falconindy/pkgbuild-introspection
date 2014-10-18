@@ -27,11 +27,15 @@ usage() {
       '' \
       'Usage: mkaurball [options]' \
       '' \
-      '    -a <file>  package <file> as .AURINFO' \
-      '    -e         edit .AURINFO before repackaging' \
-      '    -f         pass the --force flag to makepkg' \
-      '    -p <file>  use <file> as PKGBUILD' \
-      '    -h         display this help message and exit'
+      '    -a <file>         package <file> as .AURINFO' \
+      '    -e                edit .AURINFO before repackaging' \
+      '    -f                pass the --force flag to makepkg' \
+      '    -p <file>         use <file> as PKGBUILD' \
+      '    -h                display this help message and exit' \
+      '' \
+      '    --skipchecksums   Do not verify checksums of the source files' \
+      '    --skipinteg       Do not perform any verification checks on source files' \
+      '    --skippgpcheck    Do not verify source files with PGP signatures'
 }
 
 mktempdir() {
@@ -98,7 +102,7 @@ mkaurball() {
   fi
 }
 
-while getopts ':a:efp:h' flag; do
+while getopts ':a:efp:h-:' flag; do
   case $flag in
     a)
       srcinfo_path=$OPTARG
@@ -115,6 +119,14 @@ while getopts ':a:efp:h' flag; do
     h)
       usage
       exit 0
+      ;;
+    -)
+      # pass through some long options that makepkg defines
+      case $OPTARG in
+        skipinteg|skippgpcheck|skipchecksums)
+          makepkg_args+=("--$OPTARG")
+          ;;
+      esac
       ;;
     :)
       die "option '-%s' requires an argument" "$OPTARG"
