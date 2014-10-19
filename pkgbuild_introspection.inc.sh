@@ -120,7 +120,8 @@ pkgbuild_extract_to_srcinfo() {
 srcinfo_write_section_details() {
   local attr package_arch a
   local multivalued_arch_attrs=(source provides conflicts depends replaces
-                                optdepends makedepends checkdepends)
+                                optdepends makedepends checkdepends
+                                {md5,sha{1,224,256,384,512}}sums)
 
   for attr in "${singlevalued[@]}"; do
     pkgbuild_extract_to_srcinfo "$1" "$attr" 0

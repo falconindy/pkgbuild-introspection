@@ -208,18 +208,24 @@ class TestPkgbuildToAurinfo(unittest.TestCase):
         self.assertPackageNamesEqual(pb, ['ponies'])
         self.assertEqual(['bar'], pb['ponies']['depends'])
 
-    def test_HandlesMutlivaitedArchSpecific(self):
+    def test_HandlesMutlivaluedArchSpecific(self):
         pb1 = testutil.parse_pkgbuild('''
             pkgname=ponies
             arch=('x86_64')
             depends_x86_64=('friendship' 'magic')
+            source_x86_64=('http://example.com/fooball.tar.gz')
+            md5sums_x86_64=('d41d8cd98f00b204e9800998ecf8427e')
         ''')
         self.assertPackageNamesEqual(pb1, ['ponies'])
         self.assertEqual(['friendship', 'magic'], pb1['ponies']['depends_x86_64'])
+        self.assertEqual(['http://example.com/fooball.tar.gz'], pb1['ponies']['source_x86_64'])
+        self.assertEqual(['d41d8cd98f00b204e9800998ecf8427e'], pb1['ponies']['md5sums_x86_64'])
 
         pb2 = testutil.parse_pkgbuild('''
             pkgname=ponies
             arch=('x86_64')
+            source_x86_64=('http://example.com/fooball.tar.gz')
+            md5sums_x86_64=('d41d8cd98f00b204e9800998ecf8427e')
             package() {
               depends_x86_64=('friendship' 'magic')
             }
