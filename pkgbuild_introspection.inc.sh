@@ -35,7 +35,7 @@ extract_global_var() {
     # semantics that would be included with the use of 'declare -n'.
     [[ ${ref[@]} ]] && array_build "$outputvar" "$attr"
   else
-    [[ -v $attr ]] && printf -v "$outputvar" %s "${!attr}"
+    [[ ${!attr} ]] && printf -v "$outputvar" %s "${!attr}"
   fi
 }
 
