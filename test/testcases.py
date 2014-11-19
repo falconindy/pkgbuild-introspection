@@ -272,6 +272,26 @@ class TestPkgbuildToAurinfo(unittest.TestCase):
         self.assertEqual('1.2.3', pb['ponies']['pkgver'])
         self.assertNotIn('epoch', pb['ponies'])
 
+    def test_EmptyPackageAttributeOverridesGlobal(self):
+        pb = testutil.parse_pkgbuild('''
+            pkgname=ponies
+            pkgver=1.2.3
+            depends=('foo' 'bar')
+            arch=('i686' 'x86_64')
+            install=ponies.install
+
+            package() {
+              install=
+              depends=()
+            }
+        ''')
+        self.assertPackageNamesEqual(pb, ['ponies'])
+        self.assertEqual('1.2.3', pb['ponies']['pkgver'])
+        self.assertIn('depends', pb['ponies'])
+        self.assertListEqual([], pb['ponies']['depends'])
+        self.assertIn('install', pb['ponies'])
+        self.assertEqual('', pb['ponies']['install'])
+
     def test_CoverageSmokeTest(self):
         pb = testutil.parse_pkgbuild('''
             pkgname=('gcc' 'gcc-libs' 'gcc-fortran' 'gcc-objc' 'gcc-ada' 'gcc-go')
