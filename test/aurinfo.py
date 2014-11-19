@@ -121,7 +121,7 @@ def ParseAurinfoFromIterable(iterable, ecatcher=None):
         if not line.startswith('\t'):
             # start of new package
             try:
-                key, value = map(lambda s: s.strip(), line.split('=', 1))
+                key, value = map(str.strip, line.split('=', 1))
             except ValueError:
                 ecatcher.Catch(lineno, 'unexpected header format in section=%s' %
                     current_package['pkgname'])
@@ -139,7 +139,7 @@ def ParseAurinfoFromIterable(iterable, ecatcher=None):
                 continue
 
             try:
-                key, value = map(lambda s: s.strip(), line.split('=', 1))
+                key, value = map(str.strip, line.split('=', 1))
             except ValueError:
                 ecatcher.Catch(lineno, 'unexpected attribute format in '
                                'section=%s' % current_package['pkgname'])
