@@ -13,6 +13,10 @@ error() {
   printf "ERROR: $1\n" "${@:2}" >&2
 }
 
+warn() {
+  printf "WARNING: $1\n" "${@:2}" >&2
+}
+
 die() {
   error "$@"
   exit 1
@@ -23,12 +27,12 @@ usage() {
       'mkaurball v@VERSION@' \
       '' \
       'mkaurball wraps the process of creating a source tarball with an' \
-      '.AURINFO file, suitable for submission to the AUR.' \
+      '.SRCINFO file, suitable for submission to the AUR.' \
       '' \
       'Usage: mkaurball [options]' \
       '' \
-      '    -a <file>         package <file> as .AURINFO' \
-      '    -e                edit .AURINFO before repackaging' \
+      '    -a <file>         package <file> as .SRCINFO' \
+      '    -e                edit .SRCINFO before repackaging' \
       '    -f                pass the --force flag to makepkg' \
       '    -p <file>         use <file> as PKGBUILD' \
       '    -h                display this help message and exit' \
@@ -80,19 +84,17 @@ mkaurball() {
   fi
 
   if [[ $srcinfo_path ]]; then
-    # TODO: validate the .AURINFO
-    if ! cp "$srcinfo_path" "$tmpdir/$tarball_basename/.AURINFO"; then
+    if ! cp "$srcinfo_path" "$tmpdir/$tarball_basename/.SRCINFO"; then
       die 'Failed to add %s to tarball' "$srcinfo_path"
     fi
   else
-    if ! srcinfo_write >"$tmpdir/$tarball_basename/.AURINFO"; then
-      die 'Failed to write .AURINFO'
+    if ! srcinfo_write >"$tmpdir/$tarball_basename/.SRCINFO"; then
+      die 'Failed to write .SRCINFO'
     fi
   fi
 
   if (( edit_srcinfo )); then
-    # TODO: validate the .AURINFO
-    "${VISUAL:-${EDITOR:-vi}}" "$tmpdir/$tarball_basename/.AURINFO"
+    "${VISUAL:-${EDITOR:-vi}}" "$tmpdir/$tarball_basename/.SRCINFO"
   fi
 
   # chmod files before re-tarring. This enforces that all files are 644 or 755.
@@ -102,12 +104,30 @@ mkaurball() {
   fi
 }
 
+warn_deprecated() {
+  warn "The %s option is deprecated and will be removed in a future version" "$1"
+}
+
+if hash makepkg && grep -qw SRCINFO "$(hash -t makepkg 2>/dev/null)"; then
+  use_makepkg=1
+else
+  use_makepkg=0
+fi
+
 while getopts ':a:efp:h-:' flag; do
   case $flag in
     a)
+      if (( use_makepkg )); then
+        warn_deprecated "-a"
+        use_makepkg=0
+      fi
       srcinfo_path=$OPTARG
       ;;
     e)
+      if (( use_makepkg )); then
+        warn_deprecated "-e"
+        use_makepkg=0
+      fi
       edit_srcinfo=1
       ;;
     f)
@@ -141,6 +161,10 @@ makepkg_args+=("-p" "$buildfile")
 mktempdir BUILDDIR || exit
 export BUILDDIR
 
-mkaurball
+if (( use_makepkg )); then
+  makepkg "${makepkg_args[@]}" -S
+else
+  mkaurball
+fi
 
 # vim: set et ts=2 sw=2:
