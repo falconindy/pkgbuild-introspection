@@ -146,6 +146,9 @@ while getopts ':a:efp:h-:' flag; do
         skipinteg|skippgpcheck|skipchecksums)
           makepkg_args+=("--$OPTARG")
           ;;
+        *)
+          die "invalid option -- '--%s' (use -h for help)" "$OPTARG"
+          ;;
       esac
       ;;
     :)
