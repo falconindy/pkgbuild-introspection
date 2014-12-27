@@ -36,6 +36,7 @@ usage() {
       '    -f                pass the --force flag to makepkg' \
       '    -p <file>         use <file> as PKGBUILD' \
       '    -h                display this help message and exit' \
+      '    -m                pass -the --nocolor flag to  makepkg' \
       '' \
       '    --skipchecksums   Do not verify checksums of the source files' \
       '    --skipinteg       Do not perform any verification checks on source files' \
@@ -114,7 +115,7 @@ else
   use_makepkg=0
 fi
 
-while getopts ':a:efp:h-:' flag; do
+while getopts ':a:efmp:h-:' flag; do
   case $flag in
     a)
       if (( use_makepkg )); then
@@ -132,6 +133,9 @@ while getopts ':a:efp:h-:' flag; do
       ;;
     f)
       makepkg_args+=('--force')
+      ;;
+    m)
+      makepkg_args+=('--nocolor')
       ;;
     p)
       buildfile=$OPTARG
