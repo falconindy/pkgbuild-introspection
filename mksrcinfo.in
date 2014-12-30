@@ -1,0 +1,42 @@
+#!/bin/bash
+
+m4_include(pkgbuild_introspection.inc.sh)
+
+usage() {
+  printf '%s\n' \
+      'mksrcinfo v@VERSION@' \
+      '' \
+      'mksrcinfo reads the target PKGBUILD and writes an equivalent .SRCINFO.' \
+      'Without passing any arguments, mksrcinfo will read from $PWD/PKGBUILD' \
+      'and write to $PWD/.SRCINFO.' \
+      '' \
+      'Usage: mksrcinfo [/path/to/pkgbuild]' \
+      '    -h                display this help message and exit' \
+      '    -o <file>         write output to <file>'
+}
+
+die() {
+  error "$@"
+  exit 1
+}
+
+srcinfo_dest=$PWD/.SRCINFO
+
+while getopts ':o:' flag; do
+  case $flag in
+    o)
+      srcinfo_dest=$OPTARG
+      ;;
+    :)
+      die "option '-%s' requires an argument" "$OPTARG"
+      ;;
+    \?)
+      die "invalid option -- '-%s' (use -h for help)" "$OPTARG"
+      ;;
+  esac
+done
+shift $(( OPTIND - 1 ))
+
+srcinfo_write_from_pkgbuild "${1:-$PWD/PKGBUILD}" >"$srcinfo_dest";
+
+# vim: set et ts=2 sw=2:

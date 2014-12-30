@@ -4,7 +4,8 @@ VER=6
 PREFIX=/usr/local
 
 BINPROGS = \
-	mkaurball
+	mkaurball \
+	mksrcinfo
 
 V_GEN = $(_v_GEN_$(V))
 _v_GEN_ = $(_v_GEN_0)
