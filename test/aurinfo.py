@@ -118,6 +118,10 @@ def ParseAurinfoFromIterable(iterable, ecatcher=None):
             current_package = None
             continue
 
+        if line.startswith('#'):
+            # allow (and ignore) commented lines
+            continue
+
         if not line.startswith('\t'):
             # start of new package
             try:
