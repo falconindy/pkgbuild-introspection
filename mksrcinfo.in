@@ -15,6 +15,10 @@ usage() {
       '    -o <file>         write output to <file>'
 }
 
+error() {
+  printf "ERROR: $1\n" "${@:2}" >&2
+}
+
 die() {
   error "$@"
   exit 1
