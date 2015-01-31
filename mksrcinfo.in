@@ -15,6 +15,10 @@ usage() {
       '    -o <file>         write output to <file>'
 }
 
+error() {
+  printf "ERROR: $1\n" "${@:2}" >&2
+}
+
 die() {
   error "$@"
   exit 1
@@ -22,13 +26,17 @@ die() {
 
 srcinfo_dest=$PWD/.SRCINFO
 
-while getopts ':o:' flag; do
+while getopts ':o:h' flag; do
   case $flag in
     o)
       srcinfo_dest=$OPTARG
       ;;
     :)
       die "option '-%s' requires an argument" "$OPTARG"
+      ;;
+    h)
+      usage
+      exit 0
       ;;
     \?)
       die "invalid option -- '-%s' (use -h for help)" "$OPTARG"
