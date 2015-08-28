@@ -16,7 +16,7 @@ usage() {
 }
 
 error() {
-  printf "ERROR: $1\n" "${@:2}" >&2
+  printf "==> ERROR: $1\n" "${@:2}" >&2
 }
 
 die() {
@@ -53,6 +53,8 @@ while getopts ':o:h' flag; do
   esac
 done
 shift $(( OPTIND - 1 ))
+
+[[ -f PKGBUILD ]] || die 'PKGBUILD not found in current directory'
 
 # TODO: replace this with 'makepkg --printsrcinfo' once makepkg>=4.3 is released.
 {
