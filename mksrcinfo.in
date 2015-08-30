@@ -60,6 +60,6 @@ shift $(( OPTIND - 1 ))
 {
   write_srcinfo_header
   srcinfo_write_from_pkgbuild "${1:-$PWD/PKGBUILD}"
-} >"$srcinfo_dest";
+} >"$srcinfo_dest"
 
 # vim: set et ts=2 sw=2:
