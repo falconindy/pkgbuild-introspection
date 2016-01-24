@@ -54,7 +54,11 @@ while getopts ':o:h' flag; do
 done
 shift $(( OPTIND - 1 ))
 
-[[ -f PKGBUILD ]] || die 'PKGBUILD not found in current directory'
+if [[ $1 && ! -f $1 ]]; then
+  die '%s not found' "$1"
+ elif [[ ! -f PKGBUILD ]]; then
+  die 'PKGBUILD not found in current directory'
+fi
 
 # TODO: replace this with 'makepkg --printsrcinfo' once makepkg>=4.3 is released.
 {
