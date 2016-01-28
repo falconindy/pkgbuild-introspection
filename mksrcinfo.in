@@ -54,16 +54,13 @@ while getopts ':o:h' flag; do
 done
 shift $(( OPTIND - 1 ))
 
-if [[ $1 && ! -f $1 ]]; then
-  die '%s not found' "$1"
- elif [[ ! -f PKGBUILD ]]; then
-  die 'PKGBUILD not found in current directory'
-fi
+pkgbuild=${1:-$PWD/PKGBUILD}
+[[ -f $pkgbuild ]] || die '%s not found' "$pkgbuild"
 
 # TODO: replace this with 'makepkg --printsrcinfo' once makepkg>=4.3 is released.
 {
   write_srcinfo_header
-  srcinfo_write_from_pkgbuild "${1:-$PWD/PKGBUILD}"
+  srcinfo_write_from_pkgbuild "$pkgbuild"
 } >"$srcinfo_dest"
 
 # vim: set et ts=2 sw=2:
