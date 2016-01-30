@@ -6,9 +6,7 @@ usage() {
   printf '%s\n' \
       'mksrcinfo v@VERSION@' \
       '' \
-      'mksrcinfo reads the target PKGBUILD and writes an equivalent .SRCINFO.' \
-      'Without passing any arguments, mksrcinfo will read from $PWD/PKGBUILD' \
-      'and write to $PWD/.SRCINFO.' \
+      'mksrcinfo reads from $PWD/PKGBUILD and writes an equivalent .SRCINFO.' \
       '' \
       'Usage: mksrcinfo [/path/to/pkgbuild]' \
       '    -h                display this help message and exit' \
@@ -54,13 +52,8 @@ while getopts ':o:h' flag; do
 done
 shift $(( OPTIND - 1 ))
 
-pkgbuild=${1:-$PWD/PKGBUILD}
-[[ -f $pkgbuild ]] || die '%s not found' "$pkgbuild"
+[[ -f PKGBUILD ]] || die 'PKGBUILD not found in current directory'
 
-# TODO: replace this with 'makepkg --printsrcinfo' once makepkg>=4.3 is released.
-{
-  write_srcinfo_header
-  srcinfo_write_from_pkgbuild "$pkgbuild"
-} >"$srcinfo_dest"
+makepkg --printsrcinfo >"$srcinfo_dest"
 
 # vim: set et ts=2 sw=2:
