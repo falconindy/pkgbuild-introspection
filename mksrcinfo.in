@@ -1,7 +1,5 @@
 #!/bin/bash
 
-m4_include(pkgbuild_introspection.inc.sh)
-
 usage() {
   printf '%s\n' \
       'mksrcinfo v@VERSION@' \
