@@ -20,7 +20,20 @@ die() {
   exit 1
 }
 
+srcinfo_equal() {
+  local left=$1 right=$2
+
+  [[ -f $left && -f $right ]] || return 1
+
+  # Strip comments and empty lines, then do a bytewise comparison on the
+  # remainder. This means that reordering of metadata fields will cause
+  # inequality, but changes in the comments (e.g. the generation timestamp)
+  # will not.
+  cmp -s <(grep -vE '^#|^$' "$left") <(grep -vE '^#|^$' "$right")
+}
+
 srcinfo_dest=$PWD/.SRCINFO
+force_update=0
 
 while getopts ':o:h' flag; do
   case $flag in
@@ -45,9 +58,11 @@ srcinfo_tmp=$(mktemp --tmpdir srcinfo.XXXXXX)
 trap 'rm "$srcinfo_tmp"' EXIT
 
 if makepkg --printsrcinfo >"$srcinfo_tmp"; then
-  # use cat rather than cp or move to handle cases where $srcinfo_dest isn't a
-  # regular file (e.g. /dev/stdout).
-  cat "$srcinfo_tmp" >"$srcinfo_dest"
+  if ! srcinfo_equal "$srcinfo_tmp" "$srcinfo_dest"; then
+    # use cat rather than cp or move to handle cases where $srcinfo_dest isn't a
+    # regular file (e.g. /dev/stdout).
+    cat "$srcinfo_tmp" >"$srcinfo_dest"
+  fi
 fi
 
 # vim: set et ts=2 sw=2:
