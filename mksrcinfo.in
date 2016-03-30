@@ -4,11 +4,15 @@ usage() {
   printf '%s\n' \
       'mksrcinfo v@VERSION@' \
       '' \
-      'mksrcinfo reads from $PWD/PKGBUILD and writes an equivalent .SRCINFO.' \
+      'mksrcinfo reads a PKGBUILD and writes an equivalent .SRCINFO. The' \
+      'PKGBUILD is expected to be in the current working directory.' \
       '' \
-      'Usage: mksrcinfo [/path/to/pkgbuild]' \
+      'Usage: mksrcinfo [options]' \
+      '' \
+      ' Options:' \
       '    -h                display this help message and exit' \
-      '    -o <file>         write output to <file>'
+      '    -o <file>         write output to <file>' \
+      '    -p <file>         Read from <file> instead of PKGBUILD'
 }
 
 error() {
@@ -33,19 +37,22 @@ srcinfo_equal() {
 }
 
 srcinfo_dest=$PWD/.SRCINFO
-force_update=0
+buildscript=PKGBUILD
 
-while getopts ':o:h' flag; do
+while getopts ':ho:p:' flag; do
   case $flag in
     o)
       srcinfo_dest=$OPTARG
       ;;
-    :)
-      die "option '-%s' requires an argument" "$OPTARG"
-      ;;
     h)
       usage
       exit 0
+      ;;
+    p)
+      buildscript=$OPTARG
+      ;;
+    :)
+      die "option '-%s' requires an argument" "$OPTARG"
       ;;
     \?)
       die "invalid option -- '-%s' (use -h for help)" "$OPTARG"
@@ -57,7 +64,7 @@ shift $(( OPTIND - 1 ))
 srcinfo_tmp=$(mktemp --tmpdir srcinfo.XXXXXX)
 trap 'rm "$srcinfo_tmp"' EXIT
 
-if makepkg --printsrcinfo >"$srcinfo_tmp"; then
+if makepkg -p "$buildscript" --printsrcinfo >"$srcinfo_tmp"; then
   if ! srcinfo_equal "$srcinfo_tmp" "$srcinfo_dest"; then
     # use cat rather than cp or move to handle cases where $srcinfo_dest isn't a
     # regular file (e.g. /dev/stdout).
