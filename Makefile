@@ -56,6 +56,6 @@ dist:
 
 upload: dist
 	gpg --detach-sign $(PACKAGE)-$(VER).tar.gz
-	scp $(PACKAGE)-$(VER).tar.gz $(PACKAGE)-$(VER).tar.gz.sig code.falconindy.com:archive/$(PACKAGE)/
+	scp $(PACKAGE)-$(VER).tar.gz $(PACKAGE)-$(VER).tar.gz.sig pkgbuild.com:public_html/sources/$(PACKAGE)/
 
 .PHONY: regtest smoketest clean
