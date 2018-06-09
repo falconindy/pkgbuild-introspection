@@ -151,8 +151,7 @@ def ParseAurinfoFromIterable(iterable, ecatcher=None):
             if IsMultiValued(key):
                 if not current_package.get(key):
                     current_package[key] = []
-                if value:
-                    current_package[key].append(value)
+                current_package[key].append(value)
             else:
                 if not current_package.get(key):
                     current_package[key] = value

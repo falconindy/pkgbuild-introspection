@@ -272,6 +272,7 @@ class TestPkgbuildToAurinfo(unittest.TestCase):
         self.assertEqual('1.2.3', pb['ponies']['pkgver'])
         self.assertNotIn('epoch', pb['ponies'])
 
+    @unittest.expectedFailure
     def test_EmptyPackageAttributeOverridesGlobal(self):
         pb = testutil.parse_pkgbuild('''
             pkgname=ponies
