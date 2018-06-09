@@ -3,7 +3,7 @@
 import unittest
 import testutil
 
-class TestPkgbuildToAurinfo(unittest.TestCase):
+class TestPkgbuildToSrcinfo(unittest.TestCase):
     def assertPackageNamesEqual(self, srcinfo, package_names):
         return self.assertCountEqual(srcinfo.keys(), package_names)
 
@@ -26,13 +26,12 @@ class TestPkgbuildToAurinfo(unittest.TestCase):
         ''')
         self.assertCountEqual(['derp'], pb['ponies']['depends'])
 
-    # curious behavior, but the implementation explicitly supports this.
-    def test_SupportsEmptyStringsAsArrayElements(self):
+    def test_IgnoresEmptyStringsAsArrayElements(self):
         pb = testutil.parse_pkgbuild('''
             pkgname=(ponies)
             depends=(foo '' bar)
         ''')
-        self.assertCountEqual(['', 'foo', 'bar'], pb['ponies']['depends'])
+        self.assertCountEqual(['foo', 'bar'], pb['ponies']['depends'])
 
     def test_SplitPackageNames(self):
         pb = testutil.parse_pkgbuild('''
@@ -289,7 +288,6 @@ class TestPkgbuildToAurinfo(unittest.TestCase):
         self.assertEqual('1.2.3', pb['ponies']['pkgver'])
         self.assertNotIn('epoch', pb['ponies'])
 
-    @unittest.expectedFailure
     def test_EmptyPackageAttributeOverridesGlobal(self):
         pb = testutil.parse_pkgbuild('''
             pkgname=ponies

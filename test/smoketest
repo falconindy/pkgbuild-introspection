@@ -8,8 +8,9 @@ import tarfile
 
 from multiprocessing import Pool
 
-import aurinfo
 import testutil
+from srcinfo import parse as srcinfo_parse
+from srcinfo import utils as srcinfo_utils
 
 Attr = collections.namedtuple('Attr', ['name', 'multivalued'])
 
@@ -38,7 +39,7 @@ class DiffCounter(object):
         return self._diffcount
 
     def Report(self, pkgname, attrname, repovalue, parsedvalue):
-        print('DIFF(%s|%s):\n  repo   : %s\n  AURINFO: %s\n' % (
+        print('DIFF(%s|%s):\n  repo   : %s\n  SRCINFO: %s\n' % (
             pkgname, attrname, repovalue, parsedvalue))
         self.Increment()
 
@@ -117,7 +118,7 @@ def strip_soarch(deplist):
 
 
 def ReportDiff(pkgname, attrname, repovalue, parsedvalue):
-    print('DIFF(%s|%s):\n  repo   : %s\n  AURINFO: %s\n' % (
+    print('DIFF(%s|%s):\n  repo   : %s\n  SRCINFO: %s\n' % (
         pkgname, attrname, repovalue, parsedvalue))
 
 
@@ -129,14 +130,14 @@ def compare(repo_package, package):
     for k, v in repo_package.items():
         if k not in package:
             diffcount.Increment()
-            print("DIFF(%s): attribute %s in repo, not in AURINFO" % (pkgname, k))
+            print("DIFF(%s): attribute %s in repo, not in SRCINFO" % (pkgname, k))
             print('          repo   : %s' % v)
             continue
 
         if v == 'None' and package[k]:
             diffcount.Increment()
-            print('DIFF(%s): attribute %s in AURINFO, not in repo' % (pkgname, k))
-            print('          AURINFO: %s' % package[k])
+            print('DIFF(%s): attribute %s in SRCINFO, not in repo' % (pkgname, k))
+            print('          SRCINFO: %s' % package[k])
             continue
 
         # The simplest case
@@ -171,16 +172,14 @@ def compare(repo_package, package):
     return diffcount.Count()
 
 def CompareOne(reponame, alpmdb, pkgname):
-    # parse the PKGBUILD into .AURINFO
-    aurinfo_text = testutil.OutputOf('./introspect', '/'.join((reponame, pkgname)))
-
-    # i'm misunderstanding the pythonic way of doing this....
-    parsed_aurinfo = aurinfo.ParseAurinfoFromIterable(aurinfo_text)
+    # parse the PKGBUILD into .SRCINFO
+    parsed_srcinfo = srcinfo_parse.parse_srcinfo(
+            testutil.OutputOf('./introspect', '/'.join((reponame, pkgname))))
 
     diffs, total_attrs = 0, 0
 
-    for p in parsed_aurinfo.GetPackageNames():
-        package = parsed_aurinfo.GetMergedPackage(p)
+    for p in srcinfo_utils.get_package_names(srcinfo):
+        package = srcinfo_utils.get_merged_package(p, srcinfo)
         diffs += compare(alpmdb.get(p), package)
         total_attrs += len(package)
 
