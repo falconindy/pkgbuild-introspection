@@ -25,7 +25,6 @@ class TestPkgbuildToAurinfo(unittest.TestCase):
             }
         ''')
         self.assertCountEqual(['derp'], pb['ponies']['depends'])
-        self.assertCountEqual
 
     # curious behavior, but the implementation explicitly supports this.
     def test_SupportsEmptyStringsAsArrayElements(self):
