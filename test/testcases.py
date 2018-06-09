@@ -5,7 +5,7 @@ import testutil
 
 class TestPkgbuildToAurinfo(unittest.TestCase):
     def assertPackageNamesEqual(self, srcinfo, package_names):
-        return self.assertListEqual(sorted(srcinfo.keys()), sorted(package_names))
+        return self.assertCountEqual(srcinfo.keys(), package_names)
 
     def test_SinglePackage(self):
         pb = testutil.parse_pkgbuild('pkgname=ponies')
@@ -16,6 +16,24 @@ class TestPkgbuildToAurinfo(unittest.TestCase):
             pkgname=('applejack')
         ''')
         self.assertPackageNamesEqual(pb, ['applejack'])
+
+    def test_SkipsEmptyAttrsInPackageOverride(self):
+        pb = testutil.parse_pkgbuild('''
+            pkgname=(ponies)
+            package_ponies() {
+                depends+=('derp')
+            }
+        ''')
+        self.assertCountEqual(['derp'], pb['ponies']['depends'])
+        self.assertCountEqual
+
+    # curious behavior, but the implementation explicitly supports this.
+    def test_SupportsEmptyStringsAsArrayElements(self):
+        pb = testutil.parse_pkgbuild('''
+            pkgname=(ponies)
+            depends=(foo '' bar)
+        ''')
+        self.assertCountEqual(['', 'foo', 'bar'], pb['ponies']['depends'])
 
     def test_SplitPackageNames(self):
         pb = testutil.parse_pkgbuild('''

@@ -76,7 +76,11 @@ pkgbuild_get_attribute() {
 
   local pkgname=$1 attrname=$2 isarray=$3 outputvar=$4
 
-  printf -v "$outputvar" %s ''
+  if (( isarray )); then
+    eval "$outputvar=()"
+  else
+    printf -v "$outputvar" %s ''
+  fi
 
   if [[ $pkgname ]]; then
     extract_global_var "$attrname" "$isarray" "$outputvar"
