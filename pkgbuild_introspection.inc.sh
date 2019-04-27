@@ -153,8 +153,8 @@ srcinfo_write_global() {
   local singlevalued=(pkgdesc pkgver pkgrel epoch url install changelog)
   local multivalued=(arch groups license checkdepends makedepends
                      depends optdepends provides conflicts replaces
-                     noextract options backup
-                     source {md5,sha{1,224,256,384,512}}sums)
+                     noextract options backup validpgpkeys
+                     source {b2,md5,sha{1,224,256,384,512}}sums)
 
   srcinfo_open_section 'pkgbase' "${pkgbase:-$pkgname}"
   srcinfo_write_section_details ''
